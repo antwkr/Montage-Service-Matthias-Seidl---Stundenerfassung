@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stundenerfassung - Fa. Seidl</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+
+    <div class="container">
+        <div class="title-box">
+            <div class="title-text">
+                <h1>Montage-Service Matthias Seidl</h1>
+                <h3>Dienstleistungen rund um's Holz</h3>
+                <h5>Fünfkirchenerstraße 43<br>85435 Erding</h5>
+            </div>
+            <img src="images/lgo_seidl.svg" alt="Firmenlogo" class="company-logo">
+        </div>
+
+        <div class="report-header">
+            <div class="input-group">
+                <label for="client">Auftraggeber</label>
+                <input type="text" id="client" value="Knorr Bremse München" placeholder="z.B. Max Mustermann">
+            </div>
+            <div class="input-group">
+                <label for="workplace">Arbeitsstätte</label>
+                <input type="text" id="workplace" value="Moosacher Str. 80" placeholder="z.B. Musterstraße 1">
+            </div>
+            <div class="input-group">
+                <label for="reportnumber">Regiebericht Nr.</label>
+                <input type="text" id="reportnumber" value="00">
+            </div>
+        </div>
+
+        <div class="task-form">
+
+            <div class="form-left">
+                <div class="form-left-top">
+                <div class="input-group">
+                    <label for="ordernumber">Bestellnummer</label>
+                    <input type="text" id="ordernumber" placeholder="z.B. 123456">
+                </div>
+                </div>
+
+                <div class="form-left-bottom">
+                <div class="input-group">
+                    <label>Gebäude</label>
+                    <div class="custom-select-wrapper">
+                        <div class="custom-select" id="building-display">Auswählen</div>
+                        <ul class="custom-options">
+                            <li class="custom-option-header">TCK1</li>
+                            <li class="custom-option selected" data-value="TCK1 Haus 1">TCK1-Haus 1</li>
+                            <li class="custom-option" data-value="TCK1-Haus 2">TCK1-Haus 2</li>
+                            <li class="custom-option" data-value="TCK1-Haus 3">TCK1-Haus 3</li>
+                            <li class="custom-option" data-value="TCK1-Haus 4">TCK1-Haus 4</li>
+                            
+                            <li class="custom-option-header">Weitere Gebäude</li>
+                            <li class="custom-option" data-value="TCK2">TCK2</li>
+                            <li class="custom-option" data-value="TCK3">TCK3</li>
+                            <li class="custom-option" data-value="B-BAU">B-BAU</li>
+                            <li class="custom-option" data-value="WRS">WRS</li>
+                        </ul>
+                        <input type="hidden" id="building" value="TCK1 • Haus 1">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label for="room">Raum</label>
+                    <input type="text" id="room" placeholder="z.B. D115">
+                </div>
+
+                <div class="input-group">
+                    <label for="ticketnumber">Ticketnummer</label>
+                    <input type="text" id="ticketnumber" value="066.000." placeholder="z.B. 66.000.501.774">
+                </div>
+
+                <div class="input-group">
+                    <label for="hours">Std</label>
+                    <input type="number" id="hours" step="0.5" placeholder="0.0">
+                </div>
+            </div>
+            </div>
+
+            <div class="form-right">
+                <div class="input-group description-group">
+                    <label for="description">Beschreibung</label>
+                    <textarea id="description" placeholder="Was wurde gemacht?"></textarea>
+                </div>
+            </div>
+        </div>
+        
+        <div class="add">
+            <button id="addTaskBtn" class="icon-btn icon-plus">Hinzufügen</button>
+        </div>
+
+
+        <div class="table-wrapper">
+            <div class="table-header-bar">
+                <div class="date-picker-box">
+                    <input type="text" id="datePicker">
+                </div>
+                <div class="search-box hide-on-export">
+                    <input type="text" id="searchInput" placeholder="Suchen">
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Bestellnummer</th>
+                        <th>Gebäude</th>
+                        <th>Raum</th>
+                        <th>Beschreibung</th>
+                        <th>Ticketnummer</th>
+                        <th>Std</th>
+                        <th>Erledigt</th> 
+                        <th class="hide-on-export"></th> 
+                    </tr>
+                </thead>
+                <tbody id="taskTableBody">
+                </tbody>
+            </table>
+        </div>
+
+        <div id="exportButtons" class="hide-on-export">
+            <div>
+                <button id="printBtn" class="icon-btn icon-print">Drucken</button>
+                <button id="pdfBtn" class="icon-btn icon-pdf">Als PDF herunterladen</button>
+            </div>
+            <div>
+                <button id="clearAllBtn" class="delete-btn icon-btn icon-trash-white">Liste leeren</button>
+            </div>   
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/de.js"></script>
+    <script src="js/tasklist.js"></script>
+</body>
+</html>
