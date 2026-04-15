@@ -160,6 +160,10 @@ input {
     justify-content: flex-end;
 }
 
+.flatpickr-months .flatpickr-next-month:hover svg {
+    fill: var(--border-focus) !important;
+}
+
 label {
     font-size: var(--font-size-regular);
     font-weight: 600;
