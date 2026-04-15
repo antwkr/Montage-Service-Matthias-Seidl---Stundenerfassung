@@ -41,11 +41,6 @@ body {
     line-height: 1.5;
 }
 
-::selection {
-    background-color: #bbb5fb;
-    color: var(--bg-input);
-}
-
 .container {
     max-width: 1200px;
     margin: 0 auto;
