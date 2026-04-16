@@ -572,6 +572,11 @@ button.delete-btn.icon-btn.icon-trash {
 /* Mobile Card Layout */
 @media (max-width: 768px) {
 
+    .table-wrapper {
+        overflow-x: visible !important;
+        overflow-y: visible !important;
+    }
+
     table, thead, tbody, th, td, tr, tfoot {
         display: block !important;
         width: 100% !important;
@@ -586,29 +591,10 @@ button.delete-btn.icon-btn.icon-trash {
     tbody tr {
         background-color: var(--bg-input);
         border-radius: var(--border-radius);
-        margin-bottom: 20px;
+        margin: 4px 2px 20px 2px;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         padding: 5px;
-    }
-    td[data-label="Beschreibung"] {
-        padding-left: 15px !important;
-        padding-top: 35px !important;
-        padding-bottom: 15px !important;
-        flex-direction: column;
-        align-items: flex-start;
-        justify-content: flex-start;
-    }
-
-    td[data-label="Beschreibung"]::before {
-        top: 10px;
-        left: 15px;
-        width: 100%;
-    }
-
-    td[data-label="Beschreibung"] .editable-field {
-        text-align: left;
-        width: 100%;
-        min-height: 40px; /* Gibt dem Feld etwas mehr Raum zum Tippen */
+        overflow: hidden;
     }
 
     td {
@@ -616,15 +602,10 @@ button.delete-btn.icon-btn.icon-trash {
         border-bottom: 1px solid var(--bg-body);
         position: relative;
         padding-left: 45% !important; 
-        text-align: right !important;
+        text-align: right !important; 
         min-height: 44px;
-        display: flex !important;
         align-items: center;
         justify-content: flex-end;
-    }
-
-    td:last-child {
-        border-bottom: none;
     }
 
     td::before {
@@ -638,8 +619,94 @@ button.delete-btn.icon-btn.icon-trash {
         white-space: nowrap;
     }
 
+    /* ----------------------------------------------------
+       SMOOTH ACCORDION ANIMATION
+       ---------------------------------------------------- */
+    
+    /* Standardmäßig sind alle Reihen außer Bestellnummer ausgeblendet (Höhe 0) */
+    tbody tr td:not([data-label="Bestellnummer"]) {
+        max-height: 0;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        min-height: 0 !important;
+        opacity: 0;
+        overflow: hidden;
+        border-bottom-color: transparent !important;
+        transition: all 0.3s ease-in-out;
+        display: flex !important;
+    }
+
+    /* Wenn die Zeile (tr) die Klasse "expanded" hat, klappen die tds auf */
+    tbody tr.expanded td:not([data-label="Bestellnummer"]) {
+        max-height: 120px; 
+        padding-top: 12px !important;
+        padding-bottom: 12px !important;
+        min-height: 44px !important;
+        opacity: 1;
+        border-bottom-color: var(--bg-body) !important;
+    }
+
+    /* Extra viel Platz für die Beschreibung, wenn ausgeklappt */
+    tbody tr.expanded td[data-label="Beschreibung"] {
+        max-height: 300px;
+        padding-top: 35px !important;
+        padding-bottom: 15px !important;
+    }
+
+    /* ---------------------------------------------------- */
+
+    td[data-label="Bestellnummer"] {
+        cursor: pointer;
+        padding-right: 40px !important; 
+        display: flex !important;
+    }
+
+    td[data-label="Bestellnummer"]::after {
+        content: '';
+        width: 18px;
+        height: 18px;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: contain;
+        position: absolute;
+        right: 15px;
+        transition: transform 0.3s ease;
+    }
+
+    tr.expanded td[data-label="Bestellnummer"]::after {
+        transform: rotate(180deg);
+    }
+
+    td[data-label="Bestellnummer"] .editable-field {
+        cursor: text;
+    }
+
+    tbody tr:not(.expanded) td[data-label="Bestellnummer"] {
+        border-bottom: none;
+    }
+
     .editable-field {
         text-align: right;
+    }
+
+    td[data-label="Beschreibung"] {
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+        padding-left: 15px !important;
+    }
+
+    td[data-label="Beschreibung"]::before {
+        top: 10px;
+        left: 15px;
+        width: 100%;
+    }
+
+    td[data-label="Beschreibung"] .editable-field {
+        text-align: left;
+        width: 100%;
+        min-height: 40px; 
     }
 
     tfoot tr {
@@ -654,7 +721,7 @@ button.delete-btn.icon-btn.icon-trash {
     }
     
     tfoot td::before {
-        display: none;
+        display: none; 
     }
 }
 

@@ -34,6 +34,14 @@ window.handleEnterKey = function(event) {
     }
 };
 
+window.toggleMobileRow = function(event) {
+    if (window.innerWidth <= 768) {
+        if (event.target.classList.contains('editable-field')) return;
+        const tr = event.currentTarget.closest('tr');
+        if(tr) tr.classList.toggle('expanded');
+    }
+};
+
 async function loadTasks() {
     const { start, end } = getSelectedDateRange();
     
@@ -88,7 +96,7 @@ function renderTable(tasksArray) {
         }
         
         row.innerHTML = `
-            <td data-label="Bestellnummer"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'ordernumber', this.innerText)">${task.ordernumber || ''}</span></td>
+            <td data-label="Bestellnummer" onclick="toggleMobileRow(event)"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'ordernumber', this.innerText)">${task.ordernumber || ''}</span></td>
             <td data-label="Gebäude"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'building', this.innerText)">${task.building || ''}</span></td>
             <td data-label="Raum"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'room', this.innerText)">${task.room || ''}</span></td>
             <td data-label="Beschreibung"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'description', this.innerText)">${task.description || ''}</span></td>
