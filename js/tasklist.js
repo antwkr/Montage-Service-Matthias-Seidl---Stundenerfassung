@@ -88,16 +88,16 @@ function renderTable(tasksArray) {
         }
         
         row.innerHTML = `
-            <td><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'ordernumber', this.innerText)">${task.ordernumber || ''}</span></td>
-            <td><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'building', this.innerText)">${task.building || ''}</span></td>
-            <td><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'room', this.innerText)">${task.room || ''}</span></td>
-            <td><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'description', this.innerText)">${task.description || ''}</span></td>
-            <td><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'ticketnumber', this.innerText)">${task.ticketnumber || ''}</span></td>
-            <td><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'hours', this.innerText)">${formattedHours}</span></td>
-            <td style="text-align: center;">
+            <td data-label="Bestellnummer"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'ordernumber', this.innerText)">${task.ordernumber || ''}</span></td>
+            <td data-label="Gebäude"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'building', this.innerText)">${task.building || ''}</span></td>
+            <td data-label="Raum"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'room', this.innerText)">${task.room || ''}</span></td>
+            <td data-label="Beschreibung"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'description', this.innerText)">${task.description || ''}</span></td>
+            <td data-label="Ticketnummer"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'ticketnumber', this.innerText)">${task.ticketnumber || ''}</span></td>
+            <td data-label="Std"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'hours', this.innerText)">${formattedHours}</span></td>
+            <td data-label="Erledigt" style="text-align: right;">
                 <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''} onchange="toggleComplete('${task.id}', this.checked)">
             </td>
-            <td style="text-align: right;" class="hide-on-export">
+            <td class="hide-on-export" style="text-align: right;">
                 <button onclick="deleteSingleTask('${task.id}')" class="delete-btn icon-btn icon-trash"></button>
             </td>
         `;

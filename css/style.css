@@ -569,6 +569,95 @@ button.delete-btn.icon-btn.icon-trash {
     margin-top: 5px;
 }
 
+/* Mobile Card Layout */
+@media (max-width: 768px) {
+
+    table, thead, tbody, th, td, tr, tfoot {
+        display: block !important;
+        width: 100% !important;
+    }
+
+    thead tr {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+    }
+
+    tbody tr {
+        background-color: var(--bg-input);
+        border-radius: var(--border-radius);
+        margin-bottom: 20px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        padding: 5px;
+    }
+    td[data-label="Beschreibung"] {
+        padding-left: 15px !important;
+        padding-top: 35px !important;
+        padding-bottom: 15px !important;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: flex-start;
+    }
+
+    td[data-label="Beschreibung"]::before {
+        top: 10px;
+        left: 15px;
+        width: 100%;
+    }
+
+    td[data-label="Beschreibung"] .editable-field {
+        text-align: left;
+        width: 100%;
+        min-height: 40px; /* Gibt dem Feld etwas mehr Raum zum Tippen */
+    }
+
+    td {
+        border: none;
+        border-bottom: 1px solid var(--bg-body);
+        position: relative;
+        padding-left: 45% !important; 
+        text-align: right !important;
+        min-height: 44px;
+        display: flex !important;
+        align-items: center;
+        justify-content: flex-end;
+    }
+
+    td:last-child {
+        border-bottom: none;
+    }
+
+    td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 15px;
+        width: 40%;
+        text-align: left;
+        font-weight: 600;
+        color: var(--text-muted);
+        white-space: nowrap;
+    }
+
+    .editable-field {
+        text-align: right;
+    }
+
+    tfoot tr {
+        border: none;
+        background: transparent;
+        box-shadow: none;
+    }
+    
+    tfoot td {
+        padding-left: 0 !important;
+        justify-content: flex-end;
+    }
+    
+    tfoot td::before {
+        display: none;
+    }
+}
+
 @media print {
     #addTaskBtn,
     .task-form, 
