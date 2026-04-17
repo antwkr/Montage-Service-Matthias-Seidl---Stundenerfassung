@@ -95,21 +95,27 @@ input {
 
 .report-header {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 15px;
     margin-bottom: 30px;
 }
 
-.report-header input[type="text"] {
+.report-header input[type="text"],
+.report-header textarea {
     border: none;
     background-color: transparent;
     padding: 0;
     height: auto;
     font-size: 12px;
     font-weight: 500;
+    font-family: 'Inter', sans-serif;
+    color: var(--text-input);
+    resize: none; 
+    overflow: hidden; 
 }
 
-.report-header input[type="text"]:focus {
+.report-header input[type="text"]:focus,
+.report-header textarea:focus {
     outline: none;
     border: none;
     background-color: transparent;
@@ -318,6 +324,7 @@ table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 10px;
+    table-layout: auto; 
 }
 
 th, td {
@@ -329,16 +336,46 @@ th, td {
 }
 
 th {
-    width: max-content;
     font-weight: 600;
     color: var(--text-muted);
     background-color: var(--bg-header);
     vertical-align: middle;
 }
 
-th:last-child, th:nth-child(6) {
+/* --- SMARTE TABELLEN-SPALTEN-AUFTEILUNG --- */
+
+/* 1. Spalten, die sich dem Inhalt anpassen und NIEMALS umbrechen sollen */
+thead th:nth-child(1), tbody td:nth-child(1), /* Bestellnummer */
+thead th:nth-child(2), tbody td:nth-child(2), /* Gebäude */
+thead th:nth-child(5), tbody td:nth-child(5), /* Ticketnummer */
+thead th:nth-child(6), tbody td:nth-child(6), /* Std */
+thead th:nth-child(7), tbody td:nth-child(7), /* Erledigt */
+thead th:nth-child(8), tbody td:nth-child(8)  /* Papierkorb */ {
     width: 1%;
     white-space: nowrap;
+}
+
+/* Verhindert Zeilenumbrüche innerhalb der Eingabefelder dieser Spalten */
+tbody td:nth-child(1) .editable-field,
+tbody td:nth-child(2) .editable-field,
+tbody td:nth-child(5) .editable-field,
+tbody td:nth-child(6) .editable-field {
+    white-space: nowrap;
+}
+
+/* 2. Raum-Spalte: Darf umbrechen, bekommt eine fixe Mindestbreite, damit sie nicht zerquetscht wird */
+thead th:nth-child(3), tbody td:nth-child(3) {
+    width: auto;
+    min-width: 150px;
+    white-space: normal;
+}
+tbody td:nth-child(3) .editable-field {
+    white-space: normal;
+}
+
+/* 3. Beschreibungs-Spalte: Nimmt aggressiv 100% des restlichen verfügbaren Platzes ein */
+thead th:nth-child(4), tbody td:nth-child(4) {
+    width: 100%;
 }
 
 tfoot td {
@@ -366,7 +403,6 @@ button.delete-btn.icon-btn.icon-trash {
 
 .editable-field {
     cursor: text;
-    min-width: 30px;
     display: inline-block;
     width: 100%;
     outline: none;
@@ -569,8 +605,8 @@ button.delete-btn.icon-btn.icon-trash {
     margin-top: 5px;
 }
 
-/* Mobile Card Layout */
-@media (max-width: 768px) {
+/* WICHTIG: Das "screen and" verhindert, dass der Papierausdruck/das PDF wie ein Handy behandelt wird! */
+@media screen and (max-width: 768px) {
 
     .table-wrapper {
         overflow-x: visible !important;
@@ -623,7 +659,6 @@ button.delete-btn.icon-btn.icon-trash {
        SMOOTH ACCORDION ANIMATION
        ---------------------------------------------------- */
     
-    /* Standardmäßig sind alle Reihen außer Bestellnummer ausgeblendet (Höhe 0) */
     tbody tr td:not([data-label="Bestellnummer"]) {
         max-height: 0;
         padding-top: 0 !important;
@@ -636,7 +671,6 @@ button.delete-btn.icon-btn.icon-trash {
         display: flex !important;
     }
 
-    /* Wenn die Zeile (tr) die Klasse "expanded" hat, klappen die tds auf */
     tbody tr.expanded td:not([data-label="Bestellnummer"]) {
         max-height: 120px; 
         padding-top: 12px !important;
@@ -646,7 +680,6 @@ button.delete-btn.icon-btn.icon-trash {
         border-bottom-color: var(--bg-body) !important;
     }
 
-    /* Extra viel Platz für die Beschreibung, wenn ausgeklappt */
     tbody tr.expanded td[data-label="Beschreibung"] {
         max-height: 300px;
         padding-top: 35px !important;

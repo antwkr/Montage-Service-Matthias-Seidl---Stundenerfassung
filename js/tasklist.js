@@ -5,20 +5,31 @@ const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let allTasks = [];
 
-function getSelectedDateRange() {
+// Hilfsfunktion: Gibt das Datum direkt als sauberen String aus Flatpickr zurück
+function getCurrentShiftDateString() {
     const datePicker = document.getElementById('datePicker');
-    let selectedDate = new Date();
-    
     if (datePicker && datePicker.value) {
-        selectedDate = new Date(datePicker.value);
-    } else if (new Date().getHours() < 6) {
+        return datePicker.value; // Z.B. "2023-10-15" (verhindert Zeitzonen-Bugs)
+    }
+
+    let selectedDate = new Date();
+    if (selectedDate.getHours() < 6) {
         selectedDate.setDate(selectedDate.getDate() - 1);
     }
 
-    const shiftStart = new Date(selectedDate);
+    const yyyy = selectedDate.getFullYear();
+    const mm = String(selectedDate.getMonth() + 1).padStart(2, '0');
+    const dd = String(selectedDate.getDate()).padStart(2, '0');
+    
+    return `${yyyy}-${mm}-${dd}`;
+}
+
+function getSelectedDateRange() {
+    let shiftDateStr = getCurrentShiftDateString();
+    let shiftStart = new Date(shiftDateStr);
     shiftStart.setHours(6, 0, 0, 0);
 
-    const shiftEnd = new Date(shiftStart);
+    let shiftEnd = new Date(shiftStart);
     shiftEnd.setDate(shiftEnd.getDate() + 1);
 
     return {
@@ -41,6 +52,94 @@ window.toggleMobileRow = function(event) {
         if(tr) tr.classList.toggle('expanded');
     }
 };
+
+window.autoResizeTextarea = function(element) {
+    element.style.height = 'auto'; 
+    element.style.height = (element.scrollHeight) + 'px';
+};
+
+// Automatisches Speichern beim Tippen (mit 0.5s Verzögerung)
+let dailyInfoTimeout;
+window.saveDailyInfo = async function() {
+    clearTimeout(dailyInfoTimeout);
+    dailyInfoTimeout = setTimeout(async () => {
+        const shiftDate = getCurrentShiftDateString();
+        const besetzungField = document.getElementById('besetzung');
+        const reportNumberField = document.getElementById('reportnumber');
+        
+        if (!besetzungField || !reportNumberField) return;
+
+        // Prüfe zuerst, ob es den Tag schon in der Datenbank gibt (Bulletproof-Methode)
+        const { data } = await db
+            .from('daily_info')
+            .select('date')
+            .eq('date', shiftDate)
+            .maybeSingle();
+
+        if (data) {
+            // Tag existiert -> Update
+            await db.from('daily_info')
+                .update({ besetzung: besetzungField.value, reportnumber: reportNumberField.value })
+                .eq('date', shiftDate);
+        } else {
+            // Neuer Tag -> Insert
+            await db.from('daily_info')
+                .insert([{ date: shiftDate, besetzung: besetzungField.value, reportnumber: reportNumberField.value }]);
+        }
+    }, 500);
+};
+
+// Lädt Besetzung und Regiebericht Nr. aus der Tabelle "daily_info"
+async function loadDailyInfo() {
+    const shiftDate = getCurrentShiftDateString();
+    const besetzungField = document.getElementById('besetzung');
+    const reportNumberField = document.getElementById('reportnumber');
+    
+    if (!besetzungField || !reportNumberField) return;
+
+    // Suche nach existierendem Eintrag für diesen Tag
+    const { data, error } = await db
+        .from('daily_info')
+        .select('*')
+        .eq('date', shiftDate)
+        .maybeSingle();
+
+    if (data) {
+        // Eintrag gefunden: Lade die gespeicherten Werte
+        besetzungField.value = data.besetzung || '';
+        reportNumberField.value = data.reportnumber || '';
+    } else {
+        // Kein Eintrag gefunden: Standardwerte setzen
+        besetzungField.value = "Robert - 05:30-14:00";
+        
+        // Suche nach dem letzten Regiebericht, um die Nummer hochzuzählen
+        const { data: lastData } = await db
+            .from('daily_info')
+            .select('reportnumber')
+            .lt('date', shiftDate) 
+            .order('date', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+            
+        if (lastData && lastData.reportnumber) {
+            let lastNum = parseInt(lastData.reportnumber, 10);
+            if (!isNaN(lastNum)) {
+                // Erhält die Formatierung (z.B. wenn es "071" war, wird es "072")
+                reportNumberField.value = (lastNum + 1).toString().padStart(lastData.reportnumber.length, '0');
+            } else {
+                reportNumberField.value = lastData.reportnumber; 
+            }
+        } else {
+            reportNumberField.value = "71"; // Fallback, falls die Datenbank ganz leer ist
+        }
+        
+        // WICHTIG: Die frisch generierten Standardwerte sofort speichern, 
+        // damit die Nummer für zukünftige Tage fest im System verankert ist!
+        saveDailyInfo();
+    }
+    
+    autoResizeTextarea(besetzungField);
+}
 
 async function loadTasks() {
     const { start, end } = getSelectedDateRange();
@@ -219,7 +318,7 @@ async function addTask() {
         document.getElementById('ordernumber').value = '';
         document.getElementById('room').value = ''; 
         document.getElementById('description').value = '';
-        document.getElementById('ticketnumber').value = '066.000.'; 
+        document.getElementById('ticketnumber').value = '';
         document.getElementById('hours').value = '';
         
         document.getElementById('ordernumber').focus();
@@ -276,7 +375,7 @@ function downloadPDF() {
         margin:       15,
         filename:     dynamicFileName,
         image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2 },
+        html2canvas:  { scale: 2, windowWidth: 1200 }, 
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' } 
     };
 
@@ -311,6 +410,22 @@ if(selectWrapper) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+    
+    // Anbinden der automatischen Speicherung an die Textfelder
+    const besetzungField = document.getElementById('besetzung');
+    if (besetzungField) {
+        besetzungField.addEventListener('input', function() {
+            autoResizeTextarea(this);
+            saveDailyInfo(); 
+        });
+        setTimeout(() => autoResizeTextarea(besetzungField), 10);
+    }
+
+    const reportNumberField = document.getElementById('reportnumber');
+    if (reportNumberField) {
+        reportNumberField.addEventListener('input', saveDailyInfo);
+    }
+
     flatpickr("#datePicker", {
         locale: "de",
         dateFormat: "Y-m-d",
@@ -320,10 +435,12 @@ document.addEventListener("DOMContentLoaded", () => {
         disableMobile: true,
         onChange: function() {
             loadTasks();
+            loadDailyInfo(); 
         }
     });
 
     loadTasks(); 
+    loadDailyInfo(); 
     
     const searchInput = document.getElementById('searchInput');
     if (searchInput) {
