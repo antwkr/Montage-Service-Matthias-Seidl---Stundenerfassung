@@ -112,6 +112,7 @@ input {
     color: var(--text-input);
     resize: none; 
     overflow: hidden; 
+    line-height: 1.4;
 }
 
 .report-header input[type="text"]:focus,
