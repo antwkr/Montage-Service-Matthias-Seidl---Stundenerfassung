@@ -129,11 +129,18 @@ input {
     margin-bottom: 20px;
 }
 
-.form-left {
+.form-left-top {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 15px;
+    margin-bottom: 15px;
 }
+
+.form-left-bottom {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+} 
 
 .form-right {
     display: flex;
@@ -340,12 +347,13 @@ th {
 /* --- SMARTE TABELLEN-SPALTEN-AUFTEILUNG --- */
 
 /* 1. Spalten, die sich dem Inhalt anpassen und NIEMALS umbrechen sollen */
-thead th:nth-child(1), tbody td:nth-child(1), /* Bestellnummer */
+thead th:nth-child(1), tbody td:nth-child(1), /* Bestellnr */
 thead th:nth-child(2), tbody td:nth-child(2), /* Gebäude */
 thead th:nth-child(5), tbody td:nth-child(5), /* Ticketnummer */
-thead th:nth-child(6), tbody td:nth-child(6), /* Std */
-thead th:nth-child(7), tbody td:nth-child(7), /* Erledigt */
-thead th:nth-child(8), tbody td:nth-child(8)  /* Papierkorb */ {
+thead th:nth-child(6), tbody td:nth-child(6), /* Besetzung */
+thead th:nth-child(7), tbody td:nth-child(7), /* Std */
+thead th:nth-child(8), tbody td:nth-child(8), /* Erledigt */
+thead th:nth-child(9), tbody td:nth-child(9)  /* Papierkorb */ {
     width: 1%;
     white-space: nowrap;
 }
@@ -354,14 +362,15 @@ thead th:nth-child(8), tbody td:nth-child(8)  /* Papierkorb */ {
 tbody td:nth-child(1) .editable-field,
 tbody td:nth-child(2) .editable-field,
 tbody td:nth-child(5) .editable-field,
-tbody td:nth-child(6) .editable-field {
+tbody td:nth-child(6) .editable-field,
+tbody td:nth-child(7) .editable-field {
     white-space: nowrap;
 }
 
 /* 2. Raum-Spalte: Darf umbrechen, bekommt eine fixe Mindestbreite, damit sie nicht zerquetscht wird */
 thead th:nth-child(3), tbody td:nth-child(3) {
     width: auto;
-    min-width: 150px;
+    min-width: 120px;
     white-space: normal;
 }
 tbody td:nth-child(3) .editable-field {
@@ -600,7 +609,6 @@ button.delete-btn.icon-btn.icon-trash {
     margin-top: 5px;
 }
 
-/* WICHTIG: Das "screen and" verhindert, dass der Papierausdruck/das PDF wie ein Handy behandelt wird! */
 @media screen and (max-width: 768px) {
 
     h1 {
@@ -635,6 +643,7 @@ button.delete-btn.icon-btn.icon-trash {
     } 
 
     .task-form, 
+    .form-left-top,
     .form-left-bottom, 
     .report-header  {
         grid-template-columns: repeat(1,1fr);
@@ -836,12 +845,13 @@ button.delete-btn.icon-btn.icon-trash {
         display: none!important;
     }
 
-    td:nth-child(7) {
-        text-align: right !important;
+    /* Da es jetzt 9 Spalten sind, haben sich die Indizes für Print verschoben */
+    td:nth-child(8) {
+        text-align: right !important; /* Erledigt */
     }
 
-    td:nth-child(6) {
-        text-align: left !important;
+    td:nth-child(7) {
+        text-align: left !important; /* Std */
     }
 
     tfoot td {

@@ -180,6 +180,7 @@ function renderTable(tasksArray) {
             <td data-label="Raum"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'room', this.innerText)">${task.room || ''}</span></td>
             <td data-label="Beschreibung"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'description', this.innerText)">${task.description || ''}</span></td>
             <td data-label="Ticketnummer"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'ticketnumber', this.innerText)">${task.ticketnumber || ''}</span></td>
+            <td data-label="Besetzung"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'besetzung', this.innerText)">${task.besetzung || ''}</span></td>
             <td data-label="Std"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'hours', this.innerText)">${formattedHours}</span></td>
             <td data-label="Erledigt" style="text-align: right;">
                 <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''} onchange="toggleComplete('${task.id}', this.checked)">
@@ -205,7 +206,7 @@ function renderTable(tasksArray) {
 
         tfoot.innerHTML = `
             <tr>
-                <td colspan="8" style="text-align: right; font-weight: 800; border-top: 2px solid #1f2937; padding-top: 15px; padding-right: 15px;">
+                <td colspan="9" style="text-align: right; font-weight: 800; border-top: 2px solid #1f2937; padding-top: 15px; padding-right: 15px;">
                     Gesamtarbeitszeit: <span style="margin-left: 15px;">${formattedTotal} Std.</span>
                 </td>
                 <td class="hide-on-export" style="border-top: 2px solid #1f2937;"></td>
@@ -253,6 +254,7 @@ window.updateTaskField = async function(id, fieldName, newText) {
 
 async function addTask() {
     const inputOrderNumber = document.getElementById('ordernumber').value;
+    const inputBesetzung = document.getElementById('besetzung').value;
     const inputBuilding = document.getElementById('building').value;
     const inputRoom = document.getElementById('room').value;
     const inputDescription = document.getElementById('description').value;
@@ -283,6 +285,7 @@ async function addTask() {
         .from('tasks')
         .insert([{ 
             ordernumber: inputOrderNumber,
+            besetzung: inputBesetzung,
             building: inputBuilding, 
             room: inputRoom,
             description: inputDescription, 
@@ -296,6 +299,7 @@ async function addTask() {
         alert("Datenbank-Fehler: " + error.message); 
     } else {
         document.getElementById('ordernumber').value = '';
+        document.getElementById('besetzung').value = '';
         document.getElementById('room').value = ''; 
         document.getElementById('description').value = '';
         document.getElementById('ticketnumber').value = '';

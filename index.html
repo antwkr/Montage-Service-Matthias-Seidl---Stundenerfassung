@@ -40,48 +40,53 @@
         <div class="task-form">
 
             <div class="form-left">
-                <div class="input-group">
-                    <label for="ordernumber">Bestellnr.</label>
-                    <input type="text" id="ordernumber" placeholder="z.B. 123456">
-                </div>
-                <div class="input-group">
-                    <label for="besetzung">Besetzung</label>
-                    <input type="text" id="besetzung" placeholder="z.B. 2 Mann">
-                </div>
-                <div class="input-group">
-                    <label>Gebäude</label>
-                    <div class="custom-select-wrapper">
-                        <div class="custom-select" id="building-display">Auswählen</div>
-                        <ul class="custom-options">
-                            <li class="custom-option-header">TCK1</li>
-                            <li class="custom-option selected" data-value="TCK1 Hs. 1">TCK1-Hs.1</li>
-                            <li class="custom-option" data-value="TCK1-Hs.2">TCK1-Hs.2</li>
-                            <li class="custom-option" data-value="TCK1-Hs.3">TCK1-Hs.3</li>
-                            <li class="custom-option" data-value="TCK1-Hs.4">TCK1-Hs.4</li>
-                            
-                            <li class="custom-option-header">Weitere Gebäude</li>
-                            <li class="custom-option" data-value="TCK2">TCK2</li>
-                            <li class="custom-option" data-value="TCK3">TCK3</li>
-                            <li class="custom-option" data-value="B-BAU">B-BAU</li>
-                            <li class="custom-option" data-value="WRS">WRS</li>
-                        </ul>
-                        <input type="hidden" id="building" value="TCK1 • Haus 1">
+                <div class="form-left-top">
+                    <div class="input-group">
+                        <label for="ordernumber">Bestellnr.</label>
+                        <input type="text" id="ordernumber" placeholder="z.B. 123456">
+                    </div>
+                    <div class="input-group">
+                        <label for="besetzung">Besetzung</label>
+                        <input type="text" id="besetzung" placeholder="z.B. Robert">
                     </div>
                 </div>
 
-                <div class="input-group">
-                    <label for="room">Raum</label>
-                    <input type="text" id="room" placeholder="z.B. D115">
-                </div>
+                <div class="form-left-bottom">
+                    <div class="input-group">
+                        <label>Gebäude</label>
+                        <div class="custom-select-wrapper">
+                            <div class="custom-select" id="building-display">Auswählen</div>
+                            <ul class="custom-options">
+                                <li class="custom-option-header">TCK1</li>
+                                <li class="custom-option selected" data-value="TCK1 Hs. 1">TCK1-Hs.1</li>
+                                <li class="custom-option" data-value="TCK1-Hs.2">TCK1-Hs.2</li>
+                                <li class="custom-option" data-value="TCK1-Hs.3">TCK1-Hs.3</li>
+                                <li class="custom-option" data-value="TCK1-Hs.4">TCK1-Hs.4</li>
+                                
+                                <li class="custom-option-header">Weitere Gebäude</li>
+                                <li class="custom-option" data-value="TCK2">TCK2</li>
+                                <li class="custom-option" data-value="TCK3">TCK3</li>
+                                <li class="custom-option" data-value="B-BAU">B-BAU</li>
+                                <li class="custom-option" data-value="WRS">WRS</li>
+                            </ul>
+                            <input type="hidden" id="building" value="TCK1 • Haus 1">
+                        </div>
+                    </div>
 
-                <div class="input-group">
-                    <label for="ticketnumber">Ticketnummer</label>
-                    <input type="text" id="ticketnumber" placeholder="z.B. 66.000.501.774">
-                </div>
+                    <div class="input-group">
+                        <label for="room">Raum</label>
+                        <input type="text" id="room" placeholder="z.B. D115">
+                    </div>
 
-                <div class="input-group">
-                    <label for="hours">Std</label>
-                    <input type="number" id="hours" step="0.5" placeholder="0.0">
+                    <div class="input-group">
+                        <label for="ticketnumber">Ticketnummer</label>
+                        <input type="text" id="ticketnumber" placeholder="z.B. 66.000.501.774">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="hours">Std</label>
+                        <input type="number" id="hours" step="0.5" placeholder="0.0">
+                    </div>
                 </div>
             </div>
 
@@ -96,7 +101,6 @@
         <div class="add">
             <button id="addTaskBtn" class="icon-btn icon-plus">Hinzufügen</button>
         </div>
-
 
         <div class="table-wrapper">
             <div class="table-header-bar">
@@ -116,6 +120,7 @@
                         <th>Raum</th>
                         <th>Beschreibung</th>
                         <th>Ticketnummer</th>
+                        <th>Besetzung</th>
                         <th>Std</th>
                         <th>Erledigt</th> 
                         <th class="hide-on-export"></th> 
