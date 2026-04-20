@@ -269,7 +269,7 @@ button:hover {
 }
 
 .icon-print::before {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 6 2 18 2 18 9'/%3E%3Cpath d='M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2'/%3E%3Crect x='6' y='14' width='12' height='8'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 6 2 18 2 18 9'/%3E%3Cpath d='M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2-2v5a2 2 0 0 1-2 2h-2'/%3E%3Crect x='6' y='14' width='12' height='8'/%3E%3C/svg%3E");
 }
 
 .icon-pdf::before {
@@ -611,6 +611,18 @@ button.delete-btn.icon-btn.icon-trash {
 
 @media screen and (max-width: 768px) {
 
+    /* --- IPHONE AUTO-ZOOM FIX --- */
+    /* iOS Safari zoomt automatisch heran, wenn die Schrift in Eingabefeldern kleiner als 16px ist */
+    input[type="text"],
+    input[type="number"],
+    textarea,
+    select,
+    .custom-select,
+    .search-box input,
+    .editable-field {
+        font-size: 16px !important;
+    }
+
     h1 {
         font-size: 20px;
     }
@@ -727,6 +739,8 @@ button.delete-btn.icon-btn.icon-trash {
         cursor: pointer;
         padding-right: 40px !important; 
         display: flex !important;
+        justify-content: flex-start !important; /* NEU: Rückt den Inhalt nach links an das Label */
+        text-align: left !important;
     }
 
     td[data-label="Bestellnummer"]::after {
@@ -748,6 +762,7 @@ button.delete-btn.icon-btn.icon-trash {
 
     td[data-label="Bestellnummer"] .editable-field {
         cursor: text;
+        text-align: left !important; /* NEU: Text linksbündig */
     }
 
     tbody tr:not(.expanded) td[data-label="Bestellnummer"] {
@@ -791,6 +806,40 @@ button.delete-btn.icon-btn.icon-trash {
     tfoot td::before {
         display: none; 
     }
+    
+    .table-header-bar {
+        display: block;
+    }
+
+    .date-picker-box {
+        margin-bottom: 20px;
+    }
+
+    #searchInput {
+        width: 100%;
+        height: 40px;
+    }
+
+    #exportButtons {
+        flex-direction: column;
+    }
+
+    #pdfBtn {
+        margin-bottom: 0px;
+    }
+
+    .icon-trash-white::before {
+        width: 17px;
+        height: 17px;
+    }
+
+    button {
+        font-size: 14px;
+        width: 100%;
+        padding: 22px 12px;
+        margin-bottom: 15px;
+    }
+
 }
 
 @media print {
