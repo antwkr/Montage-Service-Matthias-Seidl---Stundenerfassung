@@ -389,38 +389,24 @@ async function clearEntireTable() {
     if (!error) loadTasks(); 
 }
 
-function printPage() { window.print(); }
-
-function downloadPDF() {
-    const element = document.querySelector('.container');
-
-    // Damit html2pdf den aktuellen Text aus den Inputs/Textareas lesen kann
-    const inputs = element.querySelectorAll('input, textarea');
-    inputs.forEach(input => {
-        if (input.tagName === 'TEXTAREA') {
-            input.innerHTML = input.value;
-        } else if (input.type === 'text' || input.type === 'number') {
-            input.setAttribute('value', input.value);
-        }
-    });
-
-    const today = new Date();
-    const dd = String(today.getDate()).padStart(2, '0');
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const yyyy = today.getFullYear();
+function printPage() {
+    const originalTitle = document.title;
+    const datePicker = document.getElementById('datePicker');
+    let exportDate = new Date();
     
-    const dynamicFileName = `${dd}-${mm}-${yyyy}_Stundenerfassung_KB.pdf`;
+    if (datePicker && datePicker.value) {
+        exportDate = new Date(datePicker.value);
+    }
 
-    const opt = {
-        margin:       15,
-        filename:     dynamicFileName,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, windowWidth: 1200 }, 
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' } 
-    };
-
-    // Nutzt jetzt das direkte Element statt eines fehleranfälligen Klons
-    html2pdf().set(opt).from(element).save();
+    const dd = String(exportDate.getDate()).padStart(2, '0');
+    const mm = String(exportDate.getMonth() + 1).padStart(2, '0');
+    const yyyy = exportDate.getFullYear();
+    
+    document.title = `${dd}-${mm}-${yyyy}_Stundenerfassung_KB`;
+    
+    window.print();
+    
+    document.title = originalTitle;
 }
 
 const selectWrapper = document.querySelector('.custom-select-wrapper');
@@ -503,7 +489,4 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const printBtn = document.getElementById('printBtn');
     if (printBtn) printBtn.addEventListener('click', printPage);
-
-    const pdfBtn = document.getElementById('pdfBtn');
-    if (pdfBtn) pdfBtn.addEventListener('click', downloadPDF);
 });
