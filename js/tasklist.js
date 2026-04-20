@@ -47,6 +47,12 @@ window.handleEnterKey = function(event) {
 window.toggleMobileRow = function(event) {
     if (window.innerWidth <= 768) {
         if (event.target.classList.contains('editable-field')) return;
+        
+        // Entfernt sofort den Fokus von Eingabefeldern, falls das Handy trotzdem die Tastatur öffnen will
+        if (document.activeElement && typeof document.activeElement.blur === 'function') {
+            document.activeElement.blur();
+        }
+
         const tr = event.currentTarget.closest('tr');
         if(tr) tr.classList.toggle('expanded');
     }
@@ -174,7 +180,6 @@ function renderTable(tasksArray) {
             row.classList.add('task-completed');
         }
         
-        // WICHTIG: Statt 'this.innerText' übergeben wir jetzt 'this' (das Feld selbst)
         row.innerHTML = `
             <td data-label="Bestellnummer" onclick="toggleMobileRow(event)"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'ordernumber', this)">${task.ordernumber || ''}</span></td>
             <td data-label="Gebäude"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'building', this)">${task.building || ''}</span></td>
@@ -226,7 +231,7 @@ window.toggleComplete = async function(id, isCompleted) {
         loadTasks(); 
     }
 };
-
+J
 // Die neue smarte Speichern-Funktion, die den Fokus nicht mehr klaut!
 window.updateTaskField = async function(id, fieldName, element) {
     let newText = element.innerText.trim();

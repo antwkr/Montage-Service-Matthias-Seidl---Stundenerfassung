@@ -53,31 +53,31 @@ body {
 .title-box {
     display: flex;
     justify-content: space-between;
-    align-items: flex-end;
+    align-items: flex-start;
     margin-bottom: 80px;
 }
 
 .company-logo {
-    width: 130px;
+    width: 160px;
     height: auto;
 }
 
 h1 {
     font-family: 'Inter', sans-serif;
-    font-size: 28px;
+    font-size:  41.8px;
     line-height: 1.2;
     letter-spacing: -.5px;
     font-weight: 700;
 }
 
 h2 {
-    font-size: 20px;
+    font-size: 34.84px;
     color: var(--text-muted);
     font-weight: normal;
 }
 
 h3 {
-    font-size: 22px;
+    font-size: 29.03px;
     font-family: 'Inter', sans-serif;
     letter-spacing: -.1px;
     font-weight: 700;
@@ -86,7 +86,8 @@ h3 {
 
 h5 {
     font-weight: 600;
-    font-size: 16px;
+    font-size: 20.16px;
+    line-height: 1.4;
 }
 
 input {
@@ -270,7 +271,7 @@ button:hover {
 }
 
 .icon-print::before {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 6 2 18 2 18 9'/%3E%3Cpath d='M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2-2v5a2 2 0 0 1-2 2h-2'/%3E%3Crect x='6' y='14' width='12' height='8'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 6 2 18 2 18 9'/%3E%3Cpath d='M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2'/%3E%3Crect x='6' y='14' width='12' height='8'/%3E%3C/svg%3E");
 }
 
 .icon-pdf::before {
@@ -509,7 +510,7 @@ button.delete-btn.icon-btn.icon-trash {
     border: 0px;
     background-color: transparent;
     font-family: 'Inter', sans-serif;
-    font-size: 18px;
+    font-size: 24.19px;
     color: var(--text-main);
     font-weight: 700;
     transition: border-color var(--transition-speed);
@@ -613,7 +614,6 @@ button.delete-btn.icon-btn.icon-trash {
 @media screen and (max-width: 768px) {
 
     /* --- IPHONE AUTO-ZOOM FIX --- */
-    /* iOS Safari zoomt automatisch heran, wenn die Schrift in Eingabefeldern kleiner als 16px ist */
     input[type="text"],
     input[type="number"],
     textarea,
@@ -622,6 +622,14 @@ button.delete-btn.icon-btn.icon-trash {
     .search-box input,
     .editable-field {
         font-size: 16px !important;
+    }
+
+    textarea#description {
+        height: 190px;
+    }
+
+    .title-text {
+        display: none;
     }
 
     h1 {
@@ -647,7 +655,8 @@ button.delete-btn.icon-btn.icon-trash {
     }
 
     .date-picker-box input {
-        padding: 0px;;
+        font-size: 22px!important;
+        padding: 0px;
     }
 
     .container {
@@ -660,12 +669,13 @@ button.delete-btn.icon-btn.icon-trash {
     }
 
     .title-box {
+        justify-content: center;
         gap: 30px;
         margin-bottom: 20px;
     }
 
     .company-logo {
-        width: 80px;
+        width: 140px;
         margin-bottom: 30px;
     } 
 
@@ -705,7 +715,7 @@ button.delete-btn.icon-btn.icon-trash {
         border: none;
         border-bottom: 1px solid var(--bg-body);
         position: relative;
-        padding-left: 33% !important; 
+        padding-left: 45% !important; 
         text-align: right !important; 
         min-height: 44px;
         align-items: center;
@@ -716,8 +726,15 @@ button.delete-btn.icon-btn.icon-trash {
         font-size: 14px!important;
     }
 
-    .date-picker-box input {
-        font-size: 22px!important;
+    .icon-trash::before, .task-checkbox {
+        width: 18px;
+        height: 18px;
+    }
+
+    button.delete-btn.icon-btn.icon-trash {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 0px !important;
     }
 
     td::before {
@@ -762,7 +779,7 @@ button.delete-btn.icon-btn.icon-trash {
         cursor: pointer;
         padding-right: 40px !important; 
         display: flex !important;
-        justify-content: flex-start !important; /* NEU: Rückt den Inhalt nach links an das Label */
+        justify-content: flex-start !important; 
         text-align: left !important;
     }
 
@@ -783,13 +800,17 @@ button.delete-btn.icon-btn.icon-trash {
         transform: rotate(180deg);
     }
 
+    /* NEU: Hier begrenzen wir die Breite so, dass sie nicht unter den Pfeil rutscht */
     td[data-label="Bestellnummer"] .editable-field {
         cursor: text;
-        text-align: left !important; /* NEU: Text linksbündig */
+        text-align: left !important;
+        max-width: calc(100% - 40px) !important; 
+        margin-right: auto;
     }
 
     tbody tr:not(.expanded) td[data-label="Bestellnummer"] {
         border-bottom: none;
+        margin-bottom: -8px;
     }
 
     .editable-field {
@@ -835,7 +856,7 @@ button.delete-btn.icon-btn.icon-trash {
     }
 
     .date-picker-box {
-        margin-bottom: 20px;
+        margin-bottom: 5px;
     }
 
     #searchInput {
@@ -875,10 +896,18 @@ button.delete-btn.icon-btn.icon-trash {
     .hide-on-export {
         display: none !important;
     }
+    
+    h1 {
+        font-size: 35px !important;
+    }
+
+    .company-logo {
+        width: 140px !important;
+    }
 
     body {
         background-color: white;
-        padding: 0;
+        padding: 0;        
     }
 
     .container {
@@ -908,6 +937,8 @@ button.delete-btn.icon-btn.icon-trash {
     th, td {
         padding-left: 10px !important;
         padding-right: 10px !important; 
+        font-size: 12px !important;
+        line-height: 1.2;
     }
 
     th:first-child, td:first-child {
@@ -918,7 +949,6 @@ button.delete-btn.icon-btn.icon-trash {
         display: none!important;
     }
 
-    /* Da es jetzt 9 Spalten sind, haben sich die Indizes für Print verschoben */
     td:nth-child(8) {
         text-align: right !important; /* Erledigt */
     }
