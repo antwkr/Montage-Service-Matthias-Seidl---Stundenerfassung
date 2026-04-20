@@ -32,10 +32,6 @@
                 <input type="text" id="workplace" value="Moosacher Str. 80" placeholder="z.B. Musterstraße 1">
             </div>
             <div class="input-group">
-                <label for="besetzung">Besetzung</label>
-                <textarea id="besetzung" rows="2" placeholder="Namen eintragen...">Robert - 05:30-14:00</textarea>
-            </div>
-            <div class="input-group">
                 <label for="reportnumber">Regiebericht Nr.</label>
                 <input type="text" id="reportnumber" value="00">
             </div>
@@ -44,14 +40,14 @@
         <div class="task-form">
 
             <div class="form-left">
-                <div class="form-left-top">
                 <div class="input-group">
                     <label for="ordernumber">Bestellnr.</label>
                     <input type="text" id="ordernumber" placeholder="z.B. 123456">
                 </div>
+                <div class="input-group">
+                    <label for="besetzung">Besetzung</label>
+                    <input type="text" id="besetzung" placeholder="z.B. 2 Mann">
                 </div>
-
-                <div class="form-left-bottom">
                 <div class="input-group">
                     <label>Gebäude</label>
                     <div class="custom-select-wrapper">
@@ -87,7 +83,6 @@
                     <label for="hours">Std</label>
                     <input type="number" id="hours" step="0.5" placeholder="0.0">
                 </div>
-            </div>
             </div>
 
             <div class="form-right">

@@ -5,11 +5,10 @@ const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let allTasks = [];
 
-// Hilfsfunktion: Gibt das Datum direkt als sauberen String aus Flatpickr zurück
 function getCurrentShiftDateString() {
     const datePicker = document.getElementById('datePicker');
     if (datePicker && datePicker.value) {
-        return datePicker.value; // Z.B. "2023-10-15" (verhindert Zeitzonen-Bugs)
+        return datePicker.value; 
     }
 
     let selectedDate = new Date();
@@ -58,18 +57,15 @@ window.autoResizeTextarea = function(element) {
     element.style.height = (element.scrollHeight) + 'px';
 };
 
-// Automatisches Speichern beim Tippen (mit 0.5s Verzögerung)
 let dailyInfoTimeout;
 window.saveDailyInfo = async function() {
     clearTimeout(dailyInfoTimeout);
     dailyInfoTimeout = setTimeout(async () => {
         const shiftDate = getCurrentShiftDateString();
-        const besetzungField = document.getElementById('besetzung');
         const reportNumberField = document.getElementById('reportnumber');
         
-        if (!besetzungField || !reportNumberField) return;
+        if (!reportNumberField) return;
 
-        // Prüfe zuerst, ob es den Tag schon in der Datenbank gibt (Bulletproof-Methode)
         const { data } = await db
             .from('daily_info')
             .select('date')
@@ -77,27 +73,22 @@ window.saveDailyInfo = async function() {
             .maybeSingle();
 
         if (data) {
-            // Tag existiert -> Update
             await db.from('daily_info')
-                .update({ besetzung: besetzungField.value, reportnumber: reportNumberField.value })
+                .update({ reportnumber: reportNumberField.value })
                 .eq('date', shiftDate);
         } else {
-            // Neuer Tag -> Insert
             await db.from('daily_info')
-                .insert([{ date: shiftDate, besetzung: besetzungField.value, reportnumber: reportNumberField.value }]);
+                .insert([{ date: shiftDate, reportnumber: reportNumberField.value }]);
         }
     }, 500);
 };
 
-// Lädt Besetzung und Regiebericht Nr. aus der Tabelle "daily_info"
 async function loadDailyInfo() {
     const shiftDate = getCurrentShiftDateString();
-    const besetzungField = document.getElementById('besetzung');
     const reportNumberField = document.getElementById('reportnumber');
     
-    if (!besetzungField || !reportNumberField) return;
+    if (!reportNumberField) return;
 
-    // Suche nach existierendem Eintrag für diesen Tag
     const { data, error } = await db
         .from('daily_info')
         .select('*')
@@ -105,14 +96,8 @@ async function loadDailyInfo() {
         .maybeSingle();
 
     if (data) {
-        // Eintrag gefunden: Lade die gespeicherten Werte
-        besetzungField.value = data.besetzung || '';
         reportNumberField.value = data.reportnumber || '';
     } else {
-        // Kein Eintrag gefunden: Standardwerte setzen
-        besetzungField.value = "Robert - 05:30-14:00";
-        
-        // Suche nach dem letzten Regiebericht, um die Nummer hochzuzählen
         const { data: lastData } = await db
             .from('daily_info')
             .select('reportnumber')
@@ -124,21 +109,16 @@ async function loadDailyInfo() {
         if (lastData && lastData.reportnumber) {
             let lastNum = parseInt(lastData.reportnumber, 10);
             if (!isNaN(lastNum)) {
-                // Erhält die Formatierung (z.B. wenn es "071" war, wird es "072")
                 reportNumberField.value = (lastNum + 1).toString().padStart(lastData.reportnumber.length, '0');
             } else {
                 reportNumberField.value = lastData.reportnumber; 
             }
         } else {
-            reportNumberField.value = "71"; // Fallback, falls die Datenbank ganz leer ist
+            reportNumberField.value = "71"; 
         }
         
-        // WICHTIG: Die frisch generierten Standardwerte sofort speichern, 
-        // damit die Nummer für zukünftige Tage fest im System verankert ist!
         saveDailyInfo();
     }
-    
-    autoResizeTextarea(besetzungField);
 }
 
 async function loadTasks() {
@@ -410,16 +390,6 @@ if(selectWrapper) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    
-    // Anbinden der automatischen Speicherung an die Textfelder
-    const besetzungField = document.getElementById('besetzung');
-    if (besetzungField) {
-        besetzungField.addEventListener('input', function() {
-            autoResizeTextarea(this);
-            saveDailyInfo(); 
-        });
-        setTimeout(() => autoResizeTextarea(besetzungField), 10);
-    }
 
     const reportNumberField = document.getElementById('reportnumber');
     if (reportNumberField) {
