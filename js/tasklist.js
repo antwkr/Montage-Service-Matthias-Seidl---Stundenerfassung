@@ -185,13 +185,13 @@ function renderTable(tasksArray) {
             <td data-label="Raum"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'room', this)">${task.room || ''}</span></td>
             <td data-label="Beschreibung"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'description', this)">${task.description || ''}</span></td>
             <td data-label="Ticketnummer"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'ticketnumber', this)">${task.ticketnumber || ''}</span></td>
-            <td data-label="Besetzung"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'besetzung', this)">${task.besetzung || ''}</span></td>
+            <td data-label="Mann"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'besetzung', this)">${task.besetzung || ''}</span></td>
             <td data-label="Std"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'hours', this)">${formattedHours}</span></td>
             <td data-label="Erledigt" style="text-align: right;">
                 <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''} onchange="toggleComplete('${task.id}', this.checked, this)">
             </td>
             <td class="hide-on-export" style="text-align: right;">
-                <button onclick="deleteSingleTask('${task.id}')" class="delete-btn icon-btn icon-trash"></button>
+                <button onclick="deleteSingleTask('${task.id}')" class="delete-btn icon-btn icon-trash table-delete-btn"><span class="delete-text">Löschen</span></button>
             </td>
         `;
         tableBody.appendChild(row);
@@ -223,7 +223,7 @@ function renderTable(tasksArray) {
 }
 
 window.toggleComplete = async function(id, isCompleted, checkboxElement) {
-    let task = allTasks.find(t => t.id === id);
+    let task = allTasks.find(t => t.id.toString() === id.toString());
     if (task) task.completed = isCompleted;
 
     if (checkboxElement) {
@@ -253,7 +253,7 @@ window.toggleComplete = async function(id, isCompleted, checkboxElement) {
 window.updateTaskField = async function(id, fieldName, element) {
     let newText = element.innerText.trim();
     
-    let task = allTasks.find(t => t.id === id);
+    let task = allTasks.find(t => t.id.toString() === id.toString());
     if (!task) return;
 
     let valueToSave = newText;
