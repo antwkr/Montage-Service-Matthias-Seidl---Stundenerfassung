@@ -231,7 +231,7 @@ window.toggleComplete = async function(id, isCompleted) {
         loadTasks(); 
     }
 };
-J
+
 // Die neue smarte Speichern-Funktion, die den Fokus nicht mehr klaut!
 window.updateTaskField = async function(id, fieldName, element) {
     let newText = element.innerText.trim();
