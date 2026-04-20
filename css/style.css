@@ -724,6 +724,12 @@ body > div > div.table-wrapper > table > tfoot > tr > td:nth-child(1) > span {
         justify-content: flex-end;
     }
 
+    tbody tr td:last-child {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+        border-bottom: none !important;
+    }
+
     .editable-field {
         font-size: 14px!important;
     }
@@ -735,14 +741,14 @@ body > div > div.table-wrapper > table > tfoot > tr > td:nth-child(1) > span {
 
     .table-delete-btn {
         display: flex !important;
-        justify-content: flex-start !important;
+        justify-content: center !important;
         width: 100% !important;
         background-color: var(--delete-bg) !important;
         color: var(--delete-text) !important;
-        padding: 12px 15px !important;
+        padding: 20px !important;
         border-radius: var(--border-radius);
         margin-top: 10px !important;
-        margin-bottom: 0px !important;
+        margin-bottom: 5px !important;
     }
 
     .table-delete-btn:hover {
