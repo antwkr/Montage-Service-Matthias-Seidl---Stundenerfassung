@@ -48,7 +48,6 @@ window.toggleMobileRow = function(event) {
     if (window.innerWidth <= 768) {
         if (event.target.classList.contains('editable-field')) return;
         
-        // Entfernt sofort den Fokus von Eingabefeldern, falls das Handy trotzdem die Tastatur öffnen will
         if (document.activeElement && typeof document.activeElement.blur === 'function') {
             document.activeElement.blur();
         }
@@ -189,7 +188,7 @@ function renderTable(tasksArray) {
             <td data-label="Besetzung"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'besetzung', this)">${task.besetzung || ''}</span></td>
             <td data-label="Std"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'hours', this)">${formattedHours}</span></td>
             <td data-label="Erledigt" style="text-align: right;">
-                <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''} onchange="toggleComplete('${task.id}', this.checked)">
+                <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''} onchange="toggleComplete('${task.id}', this.checked, this)">
             </td>
             <td class="hide-on-export" style="text-align: right;">
                 <button onclick="deleteSingleTask('${task.id}')" class="delete-btn icon-btn icon-trash"></button>
@@ -223,20 +222,37 @@ function renderTable(tasksArray) {
     }
 }
 
-window.toggleComplete = async function(id, isCompleted) {
+window.toggleComplete = async function(id, isCompleted, checkboxElement) {
+    let task = allTasks.find(t => t.id === id);
+    if (task) task.completed = isCompleted;
+
+    if (checkboxElement) {
+        const tr = checkboxElement.closest('tr');
+        if (tr) {
+            if (isCompleted) {
+                tr.classList.add('task-completed');
+            } else {
+                tr.classList.remove('task-completed');
+            }
+        }
+    }
+
     const { error } = await db.from('tasks').update({ completed: isCompleted }).eq('id', id);
+    
     if (error) {
         alert("Fehler beim Speichern!");
-    } else {
-        loadTasks(); 
+        if (task) task.completed = !isCompleted;
+        if (checkboxElement) {
+            checkboxElement.checked = !isCompleted;
+            const tr = checkboxElement.closest('tr');
+            if (tr) tr.classList.toggle('task-completed');
+        }
     }
 };
 
-// Die neue smarte Speichern-Funktion, die den Fokus nicht mehr klaut!
 window.updateTaskField = async function(id, fieldName, element) {
     let newText = element.innerText.trim();
     
-    // Die betreffende Aufgabe im lokalen Speicher suchen
     let task = allTasks.find(t => t.id === id);
     if (!task) return;
 
@@ -254,7 +270,6 @@ window.updateTaskField = async function(id, fieldName, element) {
         if (newText === '' || isNaN(valueToSave)) valueToSave = 0;
     }
 
-    // Prüfen, ob sich überhaupt etwas geändert hat. Wenn nicht: Nichts tun!
     let oldValue = task[fieldName];
     if (oldValue === null || oldValue === undefined) oldValue = '';
     
@@ -272,10 +287,8 @@ window.updateTaskField = async function(id, fieldName, element) {
     if (error) {
         alert("Fehler beim Aktualisieren!");
     } else {
-        // Lokales Array updaten (verhindert ständiges neu laden aus der Datenbank)
         task[fieldName] = valueToSave;
 
-        // Wenn Stunden geändert wurden, updaten wir das Feld und den Footer direkt live!
         if (fieldName === 'hours') {
             element.innerText = valueToSave > 0 ? valueToSave.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : '0,0';
             
@@ -286,7 +299,7 @@ window.updateTaskField = async function(id, fieldName, element) {
             if (tfoot) {
                 tfoot.innerHTML = `
                     <tr>
-                        <td colspan="8" style="text-align: right; font-weight: 800; border-top: 2px solid #1f2937; padding-top: 15px; padding-right: 15px;">
+                        <td colspan="9" style="text-align: right; font-weight: 800; border-top: 2px solid #1f2937; padding-top: 15px; padding-right: 15px;">
                             Gesamtarbeitszeit: <span style="margin-left: 15px;">${formattedTotal} Std.</span>
                         </td>
                         <td class="hide-on-export" style="border-top: 2px solid #1f2937;"></td>
@@ -380,25 +393,23 @@ function printPage() { window.print(); }
 
 function downloadPDF() {
     const element = document.querySelector('.container');
-    const clone = element.cloneNode(true);
+
+    // Damit html2pdf den aktuellen Text aus den Inputs/Textareas lesen kann
+    const inputs = element.querySelectorAll('input, textarea');
+    inputs.forEach(input => {
+        if (input.tagName === 'TEXTAREA') {
+            input.innerHTML = input.value;
+        } else if (input.type === 'text' || input.type === 'number') {
+            input.setAttribute('value', input.value);
+        }
+    });
+
+    const today = new Date();
+    const dd = String(today.getDate()).padStart(2, '0');
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const yyyy = today.getFullYear();
     
-    const hiddenElements = clone.querySelectorAll('.hide-on-export');
-    hiddenElements.forEach(el => el.remove());
-
-    const formToRemove = clone.querySelector('.task-form');
-    if (formToRemove) formToRemove.remove();
-
-    const datePicker = document.getElementById('datePicker');
-    let exportDate = new Date();
-    if (datePicker && datePicker.value) {
-        exportDate = new Date(datePicker.value);
-    }
-
-    const mm = String(exportDate.getMonth() + 1).padStart(2, '0');
-    const dd = String(exportDate.getDate()).padStart(2, '0');
-    const yyyy = exportDate.getFullYear();
-    
-    const dynamicFileName = `${mm}-${dd}-${yyyy}_Stundenerfassung_KB.pdf`;
+    const dynamicFileName = `${dd}-${mm}-${yyyy}_Stundenerfassung_KB.pdf`;
 
     const opt = {
         margin:       15,
@@ -408,7 +419,8 @@ function downloadPDF() {
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' } 
     };
 
-    html2pdf().set(opt).from(clone).save();
+    // Nutzt jetzt das direkte Element statt eines fehleranfälligen Klons
+    html2pdf().set(opt).from(element).save();
 }
 
 const selectWrapper = document.querySelector('.custom-select-wrapper');
