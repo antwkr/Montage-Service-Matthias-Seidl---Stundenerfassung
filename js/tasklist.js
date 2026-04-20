@@ -174,14 +174,15 @@ function renderTable(tasksArray) {
             row.classList.add('task-completed');
         }
         
+        // WICHTIG: Statt 'this.innerText' übergeben wir jetzt 'this' (das Feld selbst)
         row.innerHTML = `
-            <td data-label="Bestellnummer" onclick="toggleMobileRow(event)"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'ordernumber', this.innerText)">${task.ordernumber || ''}</span></td>
-            <td data-label="Gebäude"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'building', this.innerText)">${task.building || ''}</span></td>
-            <td data-label="Raum"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'room', this.innerText)">${task.room || ''}</span></td>
-            <td data-label="Beschreibung"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'description', this.innerText)">${task.description || ''}</span></td>
-            <td data-label="Ticketnummer"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'ticketnumber', this.innerText)">${task.ticketnumber || ''}</span></td>
-            <td data-label="Besetzung"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'besetzung', this.innerText)">${task.besetzung || ''}</span></td>
-            <td data-label="Std"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'hours', this.innerText)">${formattedHours}</span></td>
+            <td data-label="Bestellnummer" onclick="toggleMobileRow(event)"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'ordernumber', this)">${task.ordernumber || ''}</span></td>
+            <td data-label="Gebäude"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'building', this)">${task.building || ''}</span></td>
+            <td data-label="Raum"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'room', this)">${task.room || ''}</span></td>
+            <td data-label="Beschreibung"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'description', this)">${task.description || ''}</span></td>
+            <td data-label="Ticketnummer"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'ticketnumber', this)">${task.ticketnumber || ''}</span></td>
+            <td data-label="Besetzung"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'besetzung', this)">${task.besetzung || ''}</span></td>
+            <td data-label="Std"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'hours', this)">${formattedHours}</span></td>
             <td data-label="Erledigt" style="text-align: right;">
                 <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''} onchange="toggleComplete('${task.id}', this.checked)">
             </td>
@@ -226,18 +227,36 @@ window.toggleComplete = async function(id, isCompleted) {
     }
 };
 
-window.updateTaskField = async function(id, fieldName, newText) {
-    let valueToSave = newText.trim();
+// Die neue smarte Speichern-Funktion, die den Fokus nicht mehr klaut!
+window.updateTaskField = async function(id, fieldName, element) {
+    let newText = element.innerText.trim();
+    
+    // Die betreffende Aufgabe im lokalen Speicher suchen
+    let task = allTasks.find(t => t.id === id);
+    if (!task) return;
+
+    let valueToSave = newText;
 
     if (fieldName === 'hours') {
         const mathFormat = valueToSave.replace(',', '.');
         valueToSave = parseFloat(mathFormat);
 
-        if (isNaN(valueToSave)) {
+        if (isNaN(valueToSave) && newText !== '') {
             alert("Bitte eine gültige Zahl eingeben!");
-            loadTasks(); 
+            element.innerText = task.hours ? task.hours.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : '';
             return;
         }
+        if (newText === '' || isNaN(valueToSave)) valueToSave = 0;
+    }
+
+    // Prüfen, ob sich überhaupt etwas geändert hat. Wenn nicht: Nichts tun!
+    let oldValue = task[fieldName];
+    if (oldValue === null || oldValue === undefined) oldValue = '';
+    
+    if (fieldName === 'hours') {
+        if (parseFloat(oldValue || 0) === valueToSave) return;
+    } else {
+        if (oldValue.toString() === valueToSave) return;
     }
 
     const updateData = {};
@@ -248,7 +267,28 @@ window.updateTaskField = async function(id, fieldName, newText) {
     if (error) {
         alert("Fehler beim Aktualisieren!");
     } else {
-        loadTasks(); 
+        // Lokales Array updaten (verhindert ständiges neu laden aus der Datenbank)
+        task[fieldName] = valueToSave;
+
+        // Wenn Stunden geändert wurden, updaten wir das Feld und den Footer direkt live!
+        if (fieldName === 'hours') {
+            element.innerText = valueToSave > 0 ? valueToSave.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : '0,0';
+            
+            let totalHours = allTasks.reduce((sum, t) => sum + parseFloat(t.hours || 0), 0);
+            const formattedTotal = totalHours.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+            
+            const tfoot = document.querySelector('tfoot');
+            if (tfoot) {
+                tfoot.innerHTML = `
+                    <tr>
+                        <td colspan="8" style="text-align: right; font-weight: 800; border-top: 2px solid #1f2937; padding-top: 15px; padding-right: 15px;">
+                            Gesamtarbeitszeit: <span style="margin-left: 15px;">${formattedTotal} Std.</span>
+                        </td>
+                        <td class="hide-on-export" style="border-top: 2px solid #1f2937;"></td>
+                    </tr>
+                `;
+            }
+        }
     }
 };
 

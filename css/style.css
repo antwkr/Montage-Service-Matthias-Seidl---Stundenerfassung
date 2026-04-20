@@ -16,7 +16,7 @@
     --delete-hover-text: #991b1b;
     --border-radius: 6px;
     --transition-speed: 0.2s ease;
-    --font-size-regular: 12px;
+    --font-size-regular: 14px;
 }
 
 @font-face {
@@ -32,13 +32,13 @@
 }
 
 body {
+    font: 100%/1.618 sans-serif;
     font-family: 'Inter', sans-serif;
     font-size: var(--font-size-regular);
     font-weight: 500;
     background-color: var(--bg-body);
     color: var(--text-main);
     padding: 40px 20px;
-    line-height: 1.5;
 }
 
 .container {
@@ -93,6 +93,7 @@ input {
     color: var(--text-input);
 }
 
+
 .report-header {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -106,7 +107,7 @@ input {
     background-color: transparent;
     padding: 0;
     height: auto;
-    font-size: 12px;
+    font-size: var(--font-size-regular);
     font-weight: 500;
     font-family: 'Inter', sans-serif;
     color: var(--text-input);
@@ -200,7 +201,7 @@ textarea#description {
     flex-grow: 1;
     resize: none;
     font-family: 'Inter', sans-serif;
-    padding: 10px;
+    padding: 16px;
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
     background-color: var(--bg-input);
@@ -232,14 +233,14 @@ select {
 
 button {
     padding: 0 20px;
-    height: 32px;
+    height: 40px;
     background-color: var(--primary-btn);
     color: white;
     border: none;
     border-radius: var(--border-radius);
     font-family: 'Inter', sans-serif;
     font-weight: 600;
-    font-size: 12px;
+    font-size: var(--font-size-regular);
     letter-spacing: -.2px;
     cursor: pointer;
     transition: background-color var(--transition-speed);
@@ -586,7 +587,7 @@ button.delete-btn.icon-btn.icon-trash {
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
     font-family: 'Inter', sans-serif;
-    font-size: 12px;
+    font-size: var(--font-size-regular);
     background-color: var(--bg-input);
     transition: border-color var(--transition-speed);
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
@@ -624,15 +625,29 @@ button.delete-btn.icon-btn.icon-trash {
     }
 
     h1 {
-        font-size: 20px;
+        font-size: 28.833px;
+        margin-bottom: 8px;
     }
 
     h3 {
-        font-size: 14px;
+        font-size: 22.781px;
+        line-height: 1.2;
     }
 
     h5 {
-        font-size: 14px;
+        font-size: 16px;
+        line-height: 1.4;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    .custom-select {
+        padding: 16px;
+        height: 45px;
+    }
+
+    .date-picker-box input {
+        padding: 0px;;
     }
 
     .container {
@@ -690,11 +705,19 @@ button.delete-btn.icon-btn.icon-trash {
         border: none;
         border-bottom: 1px solid var(--bg-body);
         position: relative;
-        padding-left: 45% !important; 
+        padding-left: 33% !important; 
         text-align: right !important; 
         min-height: 44px;
         align-items: center;
         justify-content: flex-end;
+    }
+
+    .editable-field {
+        font-size: 14px!important;
+    }
+
+    .date-picker-box input {
+        font-size: 22px!important;
     }
 
     td::before {
@@ -818,6 +841,7 @@ button.delete-btn.icon-btn.icon-trash {
     #searchInput {
         width: 100%;
         height: 40px;
+        padding: 0 30px;
     }
 
     #exportButtons {
