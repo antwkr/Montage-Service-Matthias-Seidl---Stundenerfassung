@@ -166,7 +166,10 @@ function renderTable(tasksArray) {
 
     tasksArray.forEach(task => {
         const taskHours = parseFloat(task.hours || 0);
-        totalHours += taskHours;
+        const parsedMann = parseFloat(task.besetzung);
+        const mannCount = isNaN(parsedMann) || parsedMann <= 0 ? 1 : parsedMann;
+        
+        totalHours += (taskHours * mannCount);
 
         const formattedHours = taskHours.toLocaleString('de-DE', { 
             minimumFractionDigits: 1, 
@@ -291,8 +294,16 @@ window.updateTaskField = async function(id, fieldName, element) {
 
         if (fieldName === 'hours') {
             element.innerText = valueToSave > 0 ? valueToSave.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : '0,0';
+        }
+        
+        if (fieldName === 'hours' || fieldName === 'besetzung') {
+            let totalHours = allTasks.reduce((sum, t) => {
+                const h = parseFloat(t.hours || 0);
+                const parsedM = parseFloat(t.besetzung);
+                const m = isNaN(parsedM) || parsedM <= 0 ? 1 : parsedM;
+                return sum + (h * m);
+            }, 0);
             
-            let totalHours = allTasks.reduce((sum, t) => sum + parseFloat(t.hours || 0), 0);
             const formattedTotal = totalHours.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
             
             const tfoot = document.querySelector('tfoot');
