@@ -340,6 +340,7 @@ button:hover {
 #addTaskBtn {
     align-self: flex-end;
     width: auto;
+    padding: 0 20px;
 }
 
 .delete-btn {
@@ -357,6 +358,7 @@ button:hover {
     display: inline-flex;
     align-items: center;
     gap: 8px;
+    padding: 0;
 }
 
 .icon-btn::before {
@@ -379,6 +381,17 @@ button:hover {
     height: 11px !important;
     background-size: contain !important;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='1' x2='12' y2='23'/%3E%3Cline x1='1' y1='12' x2='23' y2='12'/%3E%3C/svg%3E");
+}
+
+.icon-trash::before {
+    width: 16px;
+    height: 16px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23dc2626' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='3 6 5 6 21 6'/%3E%3Cpath d='M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2'/%3E%3C/svg%3E");
+    transition: background-image var(--transition-speed);
+}
+
+.delete-btn:hover .icon-trash::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23991b1b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='3 6 5 6 21 6'/%3E%3Cpath d='M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2'/%3E%3C/svg%3E");
 }
 
 .table-wrapper {
@@ -446,7 +459,7 @@ th, td {
     text-align: left;
     border-bottom: 1px solid var(--border-color);
     font-size: var(--font-size-regular);
-    vertical-align: top;
+    vertical-align: middle;
 }
 
 th {
@@ -471,6 +484,13 @@ thead th:nth-child(1), tbody td:nth-child(1) {
     white-space: nowrap;
 }
 
+thead th:nth-child(8), tbody td:nth-child(8) {
+    width: 1%;
+    padding-left: 0px;
+    padding-right: 15px;
+    white-space: nowrap;
+}
+
 tbody td:nth-child(1) .editable-field,
 tbody td:nth-child(2) .editable-field,
 tbody td:nth-child(4) .editable-field,
@@ -479,7 +499,8 @@ tbody td:nth-child(6) .editable-field {
     white-space: nowrap;
 }
 
-tbody td:nth-child(4), tbody td:nth-child(7) {
+thead th:nth-child(5), tbody td:nth-child(5),
+thead th:nth-child(7), tbody td:nth-child(7) {
     text-align: center;
 }
 
@@ -505,12 +526,16 @@ tbody td:nth-child(3) .editable-field {
     outline: none;
 }
 
+.table-delete-btn .delete-text {
+    display: none;
+}
+
 tfoot td {
-    padding-right: 4px!important;
+    padding-right: 0px !important;
     text-align: right;
-    font-weight: 600!important;
-    border-top: 1.8px solid #454545!important;
-    border-bottom: 0px!important;
+    font-weight: 600 !important;
+    border-top: 1.8px solid #454545 !important;
+    border-bottom: 0px !important;
     vertical-align: middle;
 }
 
@@ -521,12 +546,13 @@ body > div > div.table-wrapper > table > tfoot > tr > td:nth-child(1) > span {
 #exportButtons {
     margin-top: 40px; 
     display: flex; 
-    gap: 15px; 
+    justify-content: flex-end; 
 }
 
 #printBtn {
     color: white;
     background-color: var(--primary-btn);
+    padding: 0 20px;
 }
 
 #printBtn:hover {
@@ -675,8 +701,39 @@ body > div > div.table-wrapper > table > tfoot > tr > td:nth-child(1) > span {
         justify-content: flex-end;
     }
 
+    tbody tr td:last-child {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+        border-bottom: none !important;
+    }
+
     .editable-field {
         font-size: 14px!important;
+    }
+
+    .table-delete-btn {
+        display: flex !important;
+        justify-content: flex-start !important;
+        width: 100% !important;
+        background-color: var(--delete-bg) !important;
+        color: var(--delete-text) !important;
+        padding: 12px 15px !important;
+        border-radius: var(--border-radius);
+        margin-top: 10px !important;
+        margin-bottom: 0px !important;
+    }
+
+    .table-delete-btn:hover {
+        background-color: var(--delete-hover-bg) !important;
+        color: var(--delete-hover-text) !important;
+    }
+
+    .table-delete-btn::before {
+        display: none !important;
+    }
+
+    .table-delete-btn .delete-text {
+        display: block !important;
     }
 
     td::before {
@@ -891,8 +948,9 @@ body > div > div.table-wrapper > table > tfoot > tr > td:nth-child(1) > span {
         display: none !important;
     }
 
-    td:nth-child(7) {
-        text-align: center !important;
+    thead th:nth-child(5), tbody td:nth-child(5),
+    thead th:nth-child(7), tbody td:nth-child(7) {
+        text-align: right !important;
     }
 
     tfoot td {

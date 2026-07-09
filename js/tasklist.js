@@ -207,11 +207,9 @@ function renderTable(tasksArray) {
 
         tfoot.innerHTML = `
             <tr>
-                <td colspan="6" style="text-align: right; font-weight: 800; border-top: 2px solid #1f2937; padding-top: 15px; padding-right: 15px;">
+                <td colspan="8" style="text-align: right; font-weight: 800; border-top: 2px solid #1f2937; padding-top: 15px;">
                     Gesamtarbeitszeit: <span style="margin-left: 15px;">${formattedTotal} Std.</span>
                 </td>
-                <td style="border-top: 2px solid #1f2937;"></td>
-                <td class="hide-on-export" style="border-top: 2px solid #1f2937;"></td>
             </tr>
         `;
     } else {
@@ -284,11 +282,9 @@ window.updateTaskField = async function(id, fieldName, element) {
             if (tfoot) {
                 tfoot.innerHTML = `
                     <tr>
-                        <td colspan="6" style="text-align: right; font-weight: 800; border-top: 2px solid #1f2937; padding-top: 15px; padding-right: 15px;">
+                        <td colspan="8" style="text-align: right; font-weight: 800; border-top: 2px solid #1f2937; padding-top: 15px;">
                             Gesamtarbeitszeit: <span style="margin-left: 15px;">${formattedTotal} Std.</span>
                         </td>
-                        <td style="border-top: 2px solid #1f2937;"></td>
-                        <td class="hide-on-export" style="border-top: 2px solid #1f2937;"></td>
                     </tr>
                 `;
             }
