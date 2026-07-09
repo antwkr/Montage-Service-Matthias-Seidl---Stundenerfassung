@@ -189,7 +189,7 @@ select {
 
 .form-left-bottom {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1.2fr 0.8fr 0.8fr;
     gap: 15px;
 } 
 
@@ -381,24 +381,6 @@ button:hover {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='1' x2='12' y2='23'/%3E%3Cline x1='1' y1='12' x2='23' y2='12'/%3E%3C/svg%3E");
 }
 
-.icon-trash::before {
-    width: 16px;
-    height: 16px;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23dc2626' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='3 6 5 6 21 6'/%3E%3Cpath d='M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2'/%3E%3C/svg%3E");
-    transition: background-image var(--transition-speed);
-}
-
-.delete-btn:hover .icon-trash::before {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23991b1b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='3 6 5 6 21 6'/%3E%3Cpath d='M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2'/%3E%3C/svg%3E");
-}
-
-.icon-trash-white::before {
-    width: 14px;
-    height: 14px;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='3 6 5 6 21 6'/%3E%3Cpath d='M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2'/%3E%3C/svg%3E");
-    transition: background-image var(--transition-speed);
-}
-
 .table-wrapper {
     margin-top: 20px;
     overflow-x: auto;
@@ -474,41 +456,41 @@ th {
     vertical-align: middle;
 }
 
-thead th:nth-child(1), tbody td:nth-child(1),
 thead th:nth-child(2), tbody td:nth-child(2),
+thead th:nth-child(4), tbody td:nth-child(4),
 thead th:nth-child(5), tbody td:nth-child(5),
 thead th:nth-child(6), tbody td:nth-child(6),
-thead th:nth-child(7), tbody td:nth-child(7),
-thead th:nth-child(8), tbody td:nth-child(8),
-thead th:nth-child(9), tbody td:nth-child(9) {
+thead th:nth-child(7), tbody td:nth-child(7) {
     width: 1%;
+    white-space: nowrap;
+}
+
+thead th:nth-child(1), tbody td:nth-child(1) {
+    width: 1%;
+    min-width: 160px;
     white-space: nowrap;
 }
 
 tbody td:nth-child(1) .editable-field,
 tbody td:nth-child(2) .editable-field,
+tbody td:nth-child(4) .editable-field,
 tbody td:nth-child(5) .editable-field,
-tbody td:nth-child(6) .editable-field,
-tbody td:nth-child(7) .editable-field {
+tbody td:nth-child(6) .editable-field {
     white-space: nowrap;
 }
 
-tbody td:nth-child(6) {
+tbody td:nth-child(4), tbody td:nth-child(7) {
     text-align: center;
 }
 
 thead th:nth-child(3), tbody td:nth-child(3) {
-    width: auto;
+    width: 100%;
     white-space: normal;
 }
 
 tbody td:nth-child(3) .editable-field {
     white-space: normal;
     min-width: 80px;
-}
-
-thead th:nth-child(4), tbody td:nth-child(4) {
-    width: 100%;
 }
 
 .editable-field {
@@ -523,18 +505,6 @@ thead th:nth-child(4), tbody td:nth-child(4) {
     outline: none;
 }
 
-.task-checkbox {
-    width: 13px;
-    height: 13px;
-    cursor: pointer;
-    accent-color: var(--primary-btn);
-    margin-top: 5px;
-}
-
-.table-delete-btn .delete-text {
-    display: none;
-}
-
 tfoot td {
     padding-right: 4px!important;
     text-align: right;
@@ -542,10 +512,6 @@ tfoot td {
     border-top: 1.8px solid #454545!important;
     border-bottom: 0px!important;
     vertical-align: middle;
-}
-
-tfoot td:last-child {
-    display: none !important;
 }
 
 body > div > div.table-wrapper > table > tfoot > tr > td:nth-child(1) > span {
@@ -556,16 +522,6 @@ body > div > div.table-wrapper > table > tfoot > tr > td:nth-child(1) > span {
     margin-top: 40px; 
     display: flex; 
     gap: 15px; 
-    justify-content: space-between;
-}
-
-#clearAllBtn {
-    color: white;
-    background-color: var(--delete-text);
-}
-
-#clearAllBtn:hover {
-    background-color: var(--delete-hover-text);
 }
 
 #printBtn {
@@ -575,11 +531,6 @@ body > div > div.table-wrapper > table > tfoot > tr > td:nth-child(1) > span {
 
 #printBtn:hover {
     background-color: var(--primary-btn-hover);
-}
-
-.table-delete-btn {
-    height: 20px;
-    padding: 0;
 }
 
 .flatpickr-months .flatpickr-next-month:hover svg {
@@ -724,44 +675,8 @@ body > div > div.table-wrapper > table > tfoot > tr > td:nth-child(1) > span {
         justify-content: flex-end;
     }
 
-    tbody tr td:last-child {
-        padding-left: 10px !important;
-        padding-right: 10px !important;
-        border-bottom: none !important;
-    }
-
     .editable-field {
         font-size: 14px!important;
-    }
-
-    .icon-trash::before, .task-checkbox {
-        width: 18px;
-        height: 18px;
-    }
-
-    .table-delete-btn {
-        display: flex !important;
-        justify-content: center !important;
-        width: 100% !important;
-        background-color: var(--delete-bg) !important;
-        color: var(--delete-text) !important;
-        padding: 20px !important;
-        border-radius: var(--border-radius);
-        margin-top: 10px !important;
-        margin-bottom: 5px !important;
-    }
-
-    .table-delete-btn:hover {
-        background-color: var(--delete-hover-bg) !important;
-        color: var(--delete-hover-text) !important;
-    }
-
-    .table-delete-btn::before {
-        display: none !important;
-    }
-
-    .table-delete-btn .delete-text {
-        display: block !important;
     }
 
     td::before {
@@ -891,15 +806,6 @@ body > div > div.table-wrapper > table > tfoot > tr > td:nth-child(1) > span {
         padding: 0 30px;
     }
 
-    #exportButtons {
-        flex-direction: column;
-    }
-
-    .icon-trash-white::before {
-        width: 17px;
-        height: 17px;
-    }
-
     button {
         font-size: 14px;
         width: 100%;
@@ -911,9 +817,7 @@ body > div > div.table-wrapper > table > tfoot > tr > td:nth-child(1) > span {
 @media print {
     #addTaskBtn,
     .task-form, 
-    #clearAllBtn,
     #exportButtons,
-    .delete-btn,
     .hide-on-export {
         display: none !important;
     }
@@ -983,16 +887,12 @@ body > div > div.table-wrapper > table > tfoot > tr > td:nth-child(1) > span {
         padding-left: 0px !important;
     }
 
-    th:last-child, td:last-child {
-        display: none !important;
-    }
-
     th:nth-child(8), td:nth-child(8) {
         display: none !important;
     }
 
     td:nth-child(7) {
-        text-align: right !important;
+        text-align: center !important;
     }
 
     tfoot td {
@@ -1000,6 +900,5 @@ body > div > div.table-wrapper > table > tfoot > tr > td:nth-child(1) > span {
         padding-right: 0px;
         border-top: 1.8px solid #454545!important;
         font-weight: 600!important;
-        border-bottom: 0px!important;
     }
 }

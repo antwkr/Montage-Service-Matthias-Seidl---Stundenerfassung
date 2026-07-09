@@ -178,21 +178,14 @@ function renderTable(tasksArray) {
 
         const row = document.createElement('tr');
         
-        if (task.completed) {
-            row.classList.add('task-completed');
-        }
-        
         row.innerHTML = `
             <td data-label="Bestellnummer" onclick="toggleMobileRow(event)"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'ordernumber', this)">${task.ordernumber || ''}</span></td>
             <td data-label="Gebäude"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'building', this)">${task.building || ''}</span></td>
-            <td data-label="Raum"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'room', this)">${task.room || ''}</span></td>
             <td data-label="Beschreibung"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'description', this)">${task.description || ''}</span></td>
             <td data-label="Ticketnummer"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'ticketnumber', this)">${task.ticketnumber || ''}</span></td>
             <td data-label="Mann"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'besetzung', this)">${task.besetzung || ''}</span></td>
             <td data-label="Std"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'hours', this)">${formattedHours}</span></td>
-            <td data-label="Erledigt" style="text-align: right;">
-                <input type="checkbox" class="task-checkbox" ${task.completed ? 'checked' : ''} onchange="toggleComplete('${task.id}', this.checked, this)">
-            </td>
+            <td data-label="Gesamt" style="text-align: center;"><span id="gesamt-${task.id}">${(taskHours * mannCount).toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</span></td>
             <td class="hide-on-export" style="text-align: right;">
                 <button onclick="deleteSingleTask('${task.id}')" class="delete-btn icon-btn icon-trash table-delete-btn"><span class="delete-text">Löschen</span></button>
             </td>
@@ -214,9 +207,10 @@ function renderTable(tasksArray) {
 
         tfoot.innerHTML = `
             <tr>
-                <td colspan="9" style="text-align: right; font-weight: 800; border-top: 2px solid #1f2937; padding-top: 15px; padding-right: 15px;">
+                <td colspan="6" style="text-align: right; font-weight: 800; border-top: 2px solid #1f2937; padding-top: 15px; padding-right: 15px;">
                     Gesamtarbeitszeit: <span style="margin-left: 15px;">${formattedTotal} Std.</span>
                 </td>
+                <td style="border-top: 2px solid #1f2937;"></td>
                 <td class="hide-on-export" style="border-top: 2px solid #1f2937;"></td>
             </tr>
         `;
@@ -224,34 +218,6 @@ function renderTable(tasksArray) {
         tfoot.innerHTML = '';
     }
 }
-
-window.toggleComplete = async function(id, isCompleted, checkboxElement) {
-    let task = allTasks.find(t => t.id.toString() === id.toString());
-    if (task) task.completed = isCompleted;
-
-    if (checkboxElement) {
-        const tr = checkboxElement.closest('tr');
-        if (tr) {
-            if (isCompleted) {
-                tr.classList.add('task-completed');
-            } else {
-                tr.classList.remove('task-completed');
-            }
-        }
-    }
-
-    const { error } = await db.from('tasks').update({ completed: isCompleted }).eq('id', id);
-    
-    if (error) {
-        alert("Fehler beim Speichern!");
-        if (task) task.completed = !isCompleted;
-        if (checkboxElement) {
-            checkboxElement.checked = !isCompleted;
-            const tr = checkboxElement.closest('tr');
-            if (tr) tr.classList.toggle('task-completed');
-        }
-    }
-};
 
 window.updateTaskField = async function(id, fieldName, element) {
     let newText = element.innerText.trim();
@@ -297,6 +263,14 @@ window.updateTaskField = async function(id, fieldName, element) {
         }
         
         if (fieldName === 'hours' || fieldName === 'besetzung') {
+            const h = parseFloat(task.hours || 0);
+            const parsedM = parseFloat(task.besetzung);
+            const m = isNaN(parsedM) || parsedM <= 0 ? 1 : parsedM;
+            const gesamtSpan = document.getElementById(`gesamt-${task.id}`);
+            if (gesamtSpan) {
+                gesamtSpan.innerText = (h * m).toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+            }
+
             let totalHours = allTasks.reduce((sum, t) => {
                 const h = parseFloat(t.hours || 0);
                 const parsedM = parseFloat(t.besetzung);
@@ -310,9 +284,10 @@ window.updateTaskField = async function(id, fieldName, element) {
             if (tfoot) {
                 tfoot.innerHTML = `
                     <tr>
-                        <td colspan="9" style="text-align: right; font-weight: 800; border-top: 2px solid #1f2937; padding-top: 15px; padding-right: 15px;">
+                        <td colspan="6" style="text-align: right; font-weight: 800; border-top: 2px solid #1f2937; padding-top: 15px; padding-right: 15px;">
                             Gesamtarbeitszeit: <span style="margin-left: 15px;">${formattedTotal} Std.</span>
                         </td>
+                        <td style="border-top: 2px solid #1f2937;"></td>
                         <td class="hide-on-export" style="border-top: 2px solid #1f2937;"></td>
                     </tr>
                 `;
@@ -325,7 +300,6 @@ async function addTask() {
     const inputOrderNumber = document.getElementById('ordernumber').value;
     const inputBesetzung = document.getElementById('besetzung').value;
     const inputBuilding = document.getElementById('building').value;
-    const inputRoom = document.getElementById('room').value;
     const inputDescription = document.getElementById('description').value;
     const inputTicket = document.getElementById('ticketnumber').value; 
     const inputHours = document.getElementById('hours').value;
@@ -356,11 +330,9 @@ async function addTask() {
             ordernumber: inputOrderNumber,
             besetzung: inputBesetzung,
             building: inputBuilding, 
-            room: inputRoom,
             description: inputDescription, 
             ticketnumber: inputTicket, 
             hours: parsedHours,
-            completed: false,
             created_at: insertDate.toISOString()
         }]);
 
@@ -369,7 +341,6 @@ async function addTask() {
     } else {
         document.getElementById('ordernumber').value = '';
         document.getElementById('besetzung').value = '';
-        document.getElementById('room').value = ''; 
         document.getElementById('description').value = '';
         document.getElementById('ticketnumber').value = '';
         document.getElementById('hours').value = '';
@@ -385,20 +356,6 @@ window.deleteSingleTask = async function(id) {
     const { error } = await db.from('tasks').delete().eq('id', id);
     if (!error) loadTasks(); 
 };
-
-async function clearEntireTable() {
-    if (!confirm("ACHTUNG: Möchten Sie wirklich ALLE Einträge löschen? Dies kann nicht rückgängig gemacht werden!")) return;
-    
-    const { start, end } = getSelectedDateRange();
-    
-    const { error } = await db
-        .from('tasks')
-        .delete()
-        .gte('created_at', start)
-        .lt('created_at', end);
-        
-    if (!error) loadTasks(); 
-}
 
 function printPage() {
     const originalTitle = document.title;
@@ -494,9 +451,6 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     }
-
-    const clearBtn = document.getElementById('clearAllBtn');
-    if (clearBtn) clearBtn.addEventListener('click', clearEntireTable);
 
     const printBtn = document.getElementById('printBtn');
     if (printBtn) printBtn.addEventListener('click', printPage);
