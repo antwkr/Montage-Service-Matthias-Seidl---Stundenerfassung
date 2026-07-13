@@ -44,7 +44,7 @@
                     </div>
                     <div class="input-group">
                         <label for="ticketnumber">Ticketnummer</label>
-                        <input type="text" id="ticketnumber" placeholder="z.B. 66.000.501.774">
+                        <input type="text" id="ticketnumber" placeholder="z.B. 066.000.501.774">
                     </div>
                 </div>
 
@@ -55,10 +55,10 @@
                             <div class="custom-select" id="building-display">Auswählen</div>
                             <ul class="custom-options">
                                 <li class="custom-option-header">TCK1</li>
-                                <li class="custom-option selected" data-value="Hs.1">Hs.1</li>
-                                <li class="custom-option" data-value="Hs.2">Hs.2</li>
-                                <li class="custom-option" data-value="Hs.3">Hs.3</li>
-                                <li class="custom-option" data-value="Hs.4">Hs.4</li>
+                                <li class="custom-option selected" data-value="Haus 1">Haus 1</li>
+                                <li class="custom-option" data-value="Haus 2">Haus 2</li>
+                                <li class="custom-option" data-value="Haus 3">Haus 3</li>
+                                <li class="custom-option" data-value="Haus 4">Haus 4</li>
                                 
                                 <li class="custom-option-header">Weitere Gebäude</li>
                                 <li class="custom-option" data-value="TCK2">TCK2</li>
@@ -66,7 +66,7 @@
                                 <li class="custom-option" data-value="B-BAU">B-BAU</li>
                                 <li class="custom-option" data-value="WRS">WRS</li>
                             </ul>
-                            <input type="hidden" id="building" value="Hs.1">
+                            <input type="hidden" id="building" value="Haus 1">
                         </div>
                     </div>
 
@@ -120,6 +120,17 @@
                 <tbody id="taskTableBody">
                 </tbody>
             </table>
+        </div>
+
+        <div class="signature-section hide-on-screen-optional">
+            <div class="signature-box">
+                <div class="signature-line"></div>
+                <p>Unterschrift des Auftraggebers</p>
+            </div>
+            <div class="signature-box">
+                <div class="signature-line"></div>
+                <p>Unterschrift des Auftragnehmers</p>
+            </div>
         </div>
 
         <div id="exportButtons" class="hide-on-export">

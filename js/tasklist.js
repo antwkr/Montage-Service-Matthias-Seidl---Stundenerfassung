@@ -46,7 +46,7 @@ window.handleEnterKey = function(event) {
 
 window.toggleMobileRow = function(event) {
     if (window.innerWidth <= 768) {
-        if (event.target.classList.contains('editable-field')) return;
+        if (event.target.classList.contains('editable-field') || event.target.classList.contains('drag-handle')) return;
         
         if (document.activeElement && typeof document.activeElement.blur === 'function') {
             document.activeElement.blur();
@@ -143,6 +143,30 @@ async function loadTasks() {
 
     allTasks = tasks || [];
     
+    // Prüfen, ob LKW Pauschale existiert, falls nicht: anlegen (mit leeren Feldern)
+    const hasLkwPauschale = allTasks.some(t => t.description && t.description.includes('LKW Pauschale'));
+    if (!hasLkwPauschale) {
+        let insertDate = new Date(start);
+        insertDate.setHours(6, 0, 0, 0); 
+        const { data: newTask, error: insertError } = await db
+            .from('tasks')
+            .insert([{ 
+                ordernumber: '',
+                besetzung: '',
+                building: '',
+                description: 'LKW Pauschale',
+                ticketnumber: '',
+                hours: 0,
+                created_at: insertDate.toISOString()
+            }])
+            .select();
+        
+        if (!insertError && newTask && newTask.length > 0) {
+            allTasks.push(newTask[0]);
+            allTasks.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        }
+    }
+
     const searchInput = document.getElementById('searchInput');
     const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
     
@@ -165,31 +189,74 @@ function renderTable(tasksArray) {
     let totalHours = 0; 
 
     tasksArray.forEach(task => {
+        const isLkw = task.description && task.description.includes('LKW Pauschale');
         const taskHours = parseFloat(task.hours || 0);
         const parsedMann = parseFloat(task.besetzung);
         const mannCount = isNaN(parsedMann) || parsedMann <= 0 ? 1 : parsedMann;
         
-        totalHours += (taskHours * mannCount);
+        if (!isLkw) {
+            totalHours += (taskHours * mannCount);
+        }
 
-        const formattedHours = taskHours.toLocaleString('de-DE', { 
-            minimumFractionDigits: 1, 
-            maximumFractionDigits: 1 
-        });
+        const formattedHours = isLkw ? '' : (taskHours > 0 ? taskHours.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : '0,0');
+        const formattedGesamt = isLkw ? '' : (taskHours * mannCount).toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+        
+        const displayOrder = isLkw ? '' : (task.ordernumber || '');
+        const displayBuilding = isLkw ? '' : (task.building || '');
+        const displayTicket = isLkw ? '' : (task.ticketnumber || '');
+        const displayMann = isLkw ? '' : (task.besetzung || '');
 
         const row = document.createElement('tr');
+        row.setAttribute('data-task-id', task.id);
+        row.setAttribute('draggable', 'false');
         
         row.innerHTML = `
-            <td data-label="Bestellnummer" onclick="toggleMobileRow(event)"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'ordernumber', this)">${task.ordernumber || ''}</span></td>
-            <td data-label="Gebäude"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'building', this)">${task.building || ''}</span></td>
+            <td data-label="Bestellnummer" onclick="toggleMobileRow(event)"><span contenteditable="${!isLkw}" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'ordernumber', this)">${displayOrder}</span></td>
+            <td data-label="Gebäude"><span contenteditable="${!isLkw}" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'building', this)">${displayBuilding}</span></td>
             <td data-label="Beschreibung"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'description', this)">${task.description || ''}</span></td>
-            <td data-label="Ticketnummer"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'ticketnumber', this)">${task.ticketnumber || ''}</span></td>
-            <td data-label="Mann"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'besetzung', this)">${task.besetzung || ''}</span></td>
-            <td data-label="Std"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'hours', this)">${formattedHours}</span></td>
-            <td data-label="Gesamt" style="text-align: center;"><span id="gesamt-${task.id}">${(taskHours * mannCount).toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</span></td>
+            <td data-label="Ticketnummer"><span contenteditable="${!isLkw}" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'ticketnumber', this)">${displayTicket}</span></td>
+            <td data-label="Mann"><span contenteditable="${!isLkw}" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'besetzung', this)">${displayMann}</span></td>
+            <td data-label="Std"><span contenteditable="${!isLkw}" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateTaskField('${task.id}', 'hours', this)">${formattedHours}</span></td>
+            <td data-label="Gesamt" style="text-align: center;"><span id="gesamt-${task.id}">${formattedGesamt}</span></td>
             <td class="hide-on-export" style="text-align: right;">
-                <button onclick="deleteSingleTask('${task.id}')" class="delete-btn icon-btn icon-trash table-delete-btn"><span class="delete-text">Löschen</span></button>
+                <div class="action-buttons">
+                    <button class="icon-btn icon-grip table-action-btn drag-handle" title="Verschieben" 
+                        onmousedown="this.closest('tr').setAttribute('draggable', 'true')" 
+                        onmouseup="this.closest('tr').setAttribute('draggable', 'false')"
+                        ontouchstart="handleTouchDragStart(event, '${task.id}')"
+                        ontouchmove="handleTouchDragMove(event)"
+                        ontouchend="handleTouchDragEnd(event)"></button>
+                    <button onclick="deleteSingleTask('${task.id}')" class="delete-btn icon-btn icon-trash table-action-btn table-delete-btn" title="Löschen"><span class="delete-text">Löschen</span></button>
+                </div>
             </td>
         `;
+
+        // Desktop Drag-and-Drop Events
+        row.addEventListener('dragstart', (e) => {
+            window.draggedTaskId = task.id;
+            e.dataTransfer.effectAllowed = 'move';
+            setTimeout(() => row.classList.add('dragging'), 0);
+        });
+        row.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            row.classList.add('drag-over');
+        });
+        row.addEventListener('dragleave', () => {
+            row.classList.remove('drag-over');
+        });
+        row.addEventListener('drop', (e) => {
+            e.preventDefault();
+            row.classList.remove('drag-over');
+            if (window.draggedTaskId && window.draggedTaskId !== task.id) {
+                reorderTasks(window.draggedTaskId, task.id);
+            }
+        });
+        row.addEventListener('dragend', () => {
+            row.classList.remove('dragging');
+            row.setAttribute('draggable', 'false');
+        });
+
         tableBody.appendChild(row);
     });
 
@@ -208,7 +275,7 @@ function renderTable(tasksArray) {
         tfoot.innerHTML = `
             <tr>
                 <td colspan="8" style="text-align: right; font-weight: 800; border-top: 2px solid #1f2937; padding-top: 15px;">
-                    Gesamtarbeitszeit: <span style="margin-left: 15px;">${formattedTotal} Std.</span>
+                    4 Mann, 9 Std./inkl. An- und Abfahrt: <span style="margin-left: 15px;">${formattedTotal} Std.</span>
                 </td>
             </tr>
         `;
@@ -216,6 +283,77 @@ function renderTable(tasksArray) {
         tfoot.innerHTML = '';
     }
 }
+
+// Touch Drag & Drop Handler für Smartphone / Tablet
+window.handleTouchDragStart = function(e, taskId) {
+    window.touchDraggedTaskId = taskId;
+    const tr = e.target.closest('tr');
+    if (tr) tr.classList.add('dragging');
+};
+
+window.handleTouchDragMove = function(e) {
+    if (!window.touchDraggedTaskId) return;
+    const touch = e.touches[0];
+    const elem = document.elementFromPoint(touch.clientX, touch.clientY);
+    const targetTr = elem ? elem.closest('tr') : null;
+    
+    document.querySelectorAll('tr.drag-over').forEach(r => r.classList.remove('drag-over'));
+    if (targetTr && targetTr.getAttribute('data-task-id') !== window.touchDraggedTaskId.toString()) {
+        targetTr.classList.add('drag-over');
+    }
+};
+
+window.handleTouchDragEnd = function(e) {
+    if (!window.touchDraggedTaskId) return;
+    const touch = e.changedTouches[0];
+    const elem = document.elementFromPoint(touch.clientX, touch.clientY);
+    const targetTr = elem ? elem.closest('tr') : null;
+    
+    document.querySelectorAll('tr.dragging, tr.drag-over').forEach(r => {
+        r.classList.remove('dragging');
+        r.classList.remove('drag-over');
+        r.setAttribute('draggable', 'false');
+    });
+
+    if (targetTr) {
+        const targetTaskId = targetTr.getAttribute('data-task-id');
+        if (targetTaskId && targetTaskId !== window.touchDraggedTaskId.toString()) {
+            reorderTasks(window.touchDraggedTaskId, targetTaskId);
+        }
+    }
+    window.touchDraggedTaskId = null;
+};
+
+// Sortierung in DB und Tabelle aktualisieren
+window.reorderTasks = async function(fromId, toId) {
+    if (!fromId || !toId || fromId === toId) return;
+    
+    const fromIndex = allTasks.findIndex(t => t.id.toString() === fromId.toString());
+    const toIndex = allTasks.findIndex(t => t.id.toString() === toId.toString());
+    if (fromIndex === -1 || toIndex === -1) return;
+
+    const [movedTask] = allTasks.splice(fromIndex, 1);
+    allTasks.splice(toIndex, 0, movedTask);
+
+    let maxTime = Math.max(...allTasks.map(t => new Date(t.created_at || new Date()).getTime()));
+    if (isNaN(maxTime)) maxTime = new Date().getTime();
+
+    for (let i = 0; i < allTasks.length; i++) {
+        allTasks[i].created_at = new Date(maxTime - i * 1000).toISOString();
+        db.from('tasks').update({ created_at: allTasks[i].created_at }).eq('id', allTasks[i].id);
+    }
+
+    const searchInput = document.getElementById('searchInput');
+    const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+    if (searchTerm) {
+        renderTable(allTasks.filter(task => 
+            (task.ticketnumber || '').toLowerCase().includes(searchTerm) ||
+            (task.ordernumber || '').toLowerCase().includes(searchTerm)
+        ));
+    } else {
+        renderTable(allTasks);
+    }
+};
 
 window.updateTaskField = async function(id, fieldName, element) {
     let newText = element.innerText.trim();
@@ -270,6 +408,8 @@ window.updateTaskField = async function(id, fieldName, element) {
             }
 
             let totalHours = allTasks.reduce((sum, t) => {
+                const isLkw = t.description && t.description.includes('LKW Pauschale');
+                if (isLkw) return sum;
                 const h = parseFloat(t.hours || 0);
                 const parsedM = parseFloat(t.besetzung);
                 const m = isNaN(parsedM) || parsedM <= 0 ? 1 : parsedM;
