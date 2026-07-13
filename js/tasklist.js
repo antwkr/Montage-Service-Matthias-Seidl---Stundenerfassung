@@ -5,6 +5,29 @@ const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let allTasks = [];
 
+// --- LOGIN & AUTHENTIFIZIERUNG ---
+async function checkAuth() {
+    const { data: { session } } = await db.auth.getSession();
+    if (session) {
+        showApp();
+    } else {
+        showLogin();
+    }
+}
+
+function showApp() {
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('app-screen').classList.remove('hidden');
+    loadTasks();
+    loadDailyInfo();
+}
+
+function showLogin() {
+    document.getElementById('login-screen').classList.remove('hidden');
+    document.getElementById('app-screen').classList.add('hidden');
+    document.getElementById('taskTableBody').innerHTML = ''; 
+}
+
 function getCurrentShiftDateString() {
     const datePicker = document.getElementById('datePicker');
     if (datePicker && datePicker.value) {
@@ -143,7 +166,6 @@ async function loadTasks() {
 
     allTasks = tasks || [];
     
-    // Prüfen, ob LKW Pauschale existiert, falls nicht: anlegen (mit leeren Feldern)
     const hasLkwPauschale = allTasks.some(t => t.description && t.description.includes('LKW Pauschale'));
     if (!hasLkwPauschale) {
         let insertDate = new Date(start);
@@ -231,7 +253,6 @@ function renderTable(tasksArray) {
             </td>
         `;
 
-        // Desktop Drag-and-Drop Events
         row.addEventListener('dragstart', (e) => {
             window.draggedTaskId = task.id;
             e.dataTransfer.effectAllowed = 'move';
@@ -284,7 +305,6 @@ function renderTable(tasksArray) {
     }
 }
 
-// Touch Drag & Drop Handler für Smartphone / Tablet
 window.handleTouchDragStart = function(e, taskId) {
     window.touchDraggedTaskId = taskId;
     const tr = e.target.closest('tr');
@@ -324,7 +344,6 @@ window.handleTouchDragEnd = function(e) {
     window.touchDraggedTaskId = null;
 };
 
-// Sortierung in DB und Tabelle aktualisieren
 window.reorderTasks = async function(fromId, toId) {
     if (!fromId || !toId || fromId === toId) return;
     
@@ -542,6 +561,36 @@ if(selectWrapper) {
 
 document.addEventListener("DOMContentLoaded", () => {
 
+    const loginForm = document.getElementById('login-form');
+    if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const errorDiv = document.getElementById('login-error');
+            errorDiv.innerText = "";
+
+            const { data, error } = await db.auth.signInWithPassword({
+                email: email,
+                password: password,
+            });
+
+            if (error) {
+                errorDiv.innerText = "Falsche E-Mail oder Passwort.";
+            } else {
+                showApp();
+            }
+        });
+    }
+
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', async () => {
+            await db.auth.signOut();
+            showLogin();
+        });
+    }
+
     const reportNumberField = document.getElementById('reportnumber');
     if (reportNumberField) {
         reportNumberField.addEventListener('input', saveDailyInfo);
@@ -555,13 +604,14 @@ document.addEventListener("DOMContentLoaded", () => {
         defaultDate: new Date(),
         disableMobile: true,
         onChange: function() {
+            // Nur laden, wenn eingeloggt (wird durch UI abgedeckt)
             loadTasks();
             loadDailyInfo(); 
         }
     });
 
-    loadTasks(); 
-    loadDailyInfo(); 
+    // Anstatt direkt zu laden, wird erst der Auth-Status geprüft!
+    checkAuth(); 
     
     const searchInput = document.getElementById('searchInput');
     if (searchInput) {

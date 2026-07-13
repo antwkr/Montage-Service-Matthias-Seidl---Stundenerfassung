@@ -94,6 +94,12 @@ input {
     color: var(--text-input);
 }
 
+input[type=email], input[type=password] {
+    padding: 15px;
+    border-radius: 5px;
+    border: 1px solid var(--text-muted);
+}
+
 label {
     font-size: var(--font-size-regular);
     font-weight: 600;
@@ -602,6 +608,21 @@ body > div > div.table-wrapper > table > tfoot > tr > td:nth-child(1) > span {
     justify-content: flex-end; 
 }
 
+#logoutBtn {
+    background-color: var(--delete-bg);
+    color: var(--delete-hover-text);
+    margin-right: 15px;
+    padding: 0 20px;
+}
+
+#logoutBtn:hover {
+    background-color: var(--delete-hover-bg);
+}
+
+.icon-logout::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23991b1b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4'/%3E%3Cpolyline points='16 17 21 12 16 7'/%3E%3Cline x1='21' y1='12' x2='9' y2='12'/%3E%3C/svg%3E");
+}
+
 #printBtn {
     color: white;
     background-color: var(--primary-btn);
@@ -938,6 +959,38 @@ body > div > div.table-wrapper > table > tfoot > tr > td:nth-child(1) > span {
         padding: 22px 12px;
         margin-bottom: 15px;
     }
+
+    #exportButtons {
+        flex-direction: column;
+    }
+
+    #logoutBtn {
+        margin-right: 0;
+        margin-bottom: 15px;
+    }
+}
+
+/* --- LOGIN STYLES --- */
+.hidden {
+    display: none !important;
+}
+
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.login-box {
+    background-color: var(--bg-card);
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
 }
 
 @media print {
