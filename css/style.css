@@ -1017,6 +1017,7 @@ body > div > div.table-wrapper > table > tfoot > tr > td:nth-child(1) > span {
 
     h1 {
         font-size: 30px !important;
+        margin-bottom: 0px!important;
     }
 
     h3 {
