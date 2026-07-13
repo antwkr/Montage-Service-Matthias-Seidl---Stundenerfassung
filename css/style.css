@@ -677,6 +677,10 @@ body > div > div.table-wrapper > table > tfoot > tr > td:nth-child(1) > span {
         font-size: 16px !important;
     }
 
+    body {
+        background-color: #f8fafc;
+    } 
+
     textarea#description {
         height: 190px;
     }
