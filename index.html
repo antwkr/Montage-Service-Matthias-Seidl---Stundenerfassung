@@ -24,9 +24,7 @@
                     <label for="login-password">Passwort</label>
                     <input type="password" id="login-password" required placeholder="••••••••">
                 </div>
-                
                 <div id="login-error" style="color: var(--delete-text); margin-bottom: 15px; font-size: 13px; text-align: left; font-weight: 600;"></div>
-                
                 <button type="submit" style="width: 100%;">Anmelden</button>
             </form>
         </div>
@@ -36,7 +34,7 @@
         
         <div class="view-toggle hide-on-export">
             <button id="btn-view-daily" class="tab-btn active">Tageserfassung</button>
-            <button id="btn-view-summary" class="tab-btn">Zusammenfassung</button>
+            <button id="btn-view-summary" class="tab-btn">Bestellmaske</button>
         </div>
 
         <div class="container">
@@ -89,7 +87,6 @@
                                         <li class="custom-option" data-value="Haus 2">Haus 2</li>
                                         <li class="custom-option" data-value="Haus 3">Haus 3</li>
                                         <li class="custom-option" data-value="Haus 4">Haus 4</li>
-                                        
                                         <li class="custom-option-header">Weitere Gebäude</li>
                                         <li class="custom-option" data-value="TCK2">TCK2</li>
                                         <li class="custom-option" data-value="TCK3">TCK3</li>
@@ -99,19 +96,16 @@
                                     <input type="hidden" id="building" value="Haus 1">
                                 </div>
                             </div>
-
                             <div class="input-group">
                                 <label for="besetzung">Mann</label>
                                 <input type="text" id="besetzung">
                             </div>
-
                             <div class="input-group">
                                 <label for="hours">Std</label>
                                 <input type="number" id="hours" step="0.5" placeholder="0.0">
                             </div>
                         </div>
                     </div>
-
                     <div class="form-right">
                         <div class="input-group description-group">
                             <label for="description">Beschreibung</label>
@@ -165,16 +159,31 @@
             </div>
 
             <div id="view-summary" class="hidden">
-                <div class="summary-controls hide-on-export">
-                    <div class="input-group" style="width: 300px;">
-                        <label>Zeitraum wählen</label>
-                        <input type="text" id="summaryDatePicker" placeholder="Vom - Bis">
+                <div class="table-header-bar" style="margin-bottom: 30px;">
+                    <div class="date-picker-box" style="width: 100%;">
+                        <input type="text" id="orderNumberInput" placeholder="Bestellnummer eingeben..." style="width: 100%;">
                     </div>
-                    <button id="generateSummaryBtn" class="icon-btn">Daten laden</button>
                 </div>
-                
-                <div id="summaryContent" class="summary-content">
-                    <p class="summary-placeholder">Bitte wähle einen Zeitraum aus und klicke auf "Daten laden".</p>
+
+                <div class="table-wrapper">
+                    <table class="detailed-summary">
+                        <thead>
+                            <tr>
+                                <th style="width: 15%;">Datum</th>
+                                <th style="width: 70%;">Beschreibung</th>
+                                <th style="width: 10%; text-align: center;">Std</th>
+                                <th style="width: 5%;" class="hide-on-export"></th> 
+                            </tr>
+                        </thead>
+                        <tbody id="orderTableBody">
+                        </tbody>
+                        <tfoot id="orderTableFoot">
+                        </tfoot>
+                    </table>
+                </div>
+
+                <div class="add hide-on-export" style="margin-top: 15px;">
+                    <button id="addEmptyOrderRowBtn" class="icon-btn icon-plus">Neue Zeile</button>
                 </div>
             </div>
 
