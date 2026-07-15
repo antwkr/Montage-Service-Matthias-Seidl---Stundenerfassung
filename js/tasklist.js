@@ -166,6 +166,15 @@ async function loadTasks() {
 
     allTasks = tasks || [];
     
+    // B-BAU immer an die erste Stelle gruppieren, danach nach Zeit (bzw. nach manueller Sortierung) ordnen
+    allTasks.sort((a, b) => {
+        const isA = (a.building === 'B-BAU');
+        const isB = (b.building === 'B-BAU');
+        if (isA && !isB) return -1;
+        if (!isA && isB) return 1;
+        return new Date(b.created_at) - new Date(a.created_at);
+    });
+    
     const hasLkwPauschale = allTasks.some(t => t.description && t.description.includes('LKW Pauschale'));
     if (!hasLkwPauschale) {
         let insertDate = new Date(start);
@@ -185,7 +194,14 @@ async function loadTasks() {
         
         if (!insertError && newTask && newTask.length > 0) {
             allTasks.push(newTask[0]);
-            allTasks.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            
+            allTasks.sort((a, b) => {
+                const isA = (a.building === 'B-BAU');
+                const isB = (b.building === 'B-BAU');
+                if (isA && !isB) return -1;
+                if (!isA && isB) return 1;
+                return new Date(b.created_at) - new Date(a.created_at);
+            });
         }
     }
 
@@ -296,7 +312,7 @@ function renderTable(tasksArray) {
         tfoot.innerHTML = `
             <tr>
                 <td colspan="8" style="text-align: right; font-weight: 800; border-top: 2px solid #1f2937; padding-top: 15px;">
-                    4 Mann, 9 Std./inkl. An- und Abfahrt: <span style="margin-left: 15px;">${formattedTotal} Std.</span>
+                    4 Mann, 9 Std. inkl An- und Abfahrt: <span style="margin-left: 15px;">${formattedTotal} Std.</span>
                 </td>
             </tr>
         `;
@@ -344,23 +360,30 @@ window.handleTouchDragEnd = function(e) {
     window.touchDraggedTaskId = null;
 };
 
-window.reorderTasks = async function(fromId, toId) {
-    if (!fromId || !toId || fromId === toId) return;
-    
-    const fromIndex = allTasks.findIndex(t => t.id.toString() === fromId.toString());
-    const toIndex = allTasks.findIndex(t => t.id.toString() === toId.toString());
-    if (fromIndex === -1 || toIndex === -1) return;
+// Festes Speichern der Anordnung in der Datenbank (Sekundengenaue Abstufung)
+window.saveOrderToDB = async function() {
+    let shiftDateStr = getCurrentShiftDateString();
+    let baseDate = new Date(shiftDateStr);
+    baseDate.setHours(20, 0, 0, 0); 
 
-    const [movedTask] = allTasks.splice(fromIndex, 1);
-    allTasks.splice(toIndex, 0, movedTask);
-
-    let maxTime = Math.max(...allTasks.map(t => new Date(t.created_at || new Date()).getTime()));
-    if (isNaN(maxTime)) maxTime = new Date().getTime();
-
+    const updates = [];
     for (let i = 0; i < allTasks.length; i++) {
-        allTasks[i].created_at = new Date(maxTime - i * 1000).toISOString();
-        db.from('tasks').update({ created_at: allTasks[i].created_at }).eq('id', allTasks[i].id);
+        let newTime = new Date(baseDate.getTime() - i * 1000);
+        allTasks[i].created_at = newTime.toISOString();
+        updates.push(db.from('tasks').update({ created_at: allTasks[i].created_at }).eq('id', allTasks[i].id));
     }
+    await Promise.all(updates);
+};
+
+window.moveTask = async function(id, direction) {
+    const index = allTasks.findIndex(t => t.id.toString() === id.toString());
+    if (index === -1) return;
+
+    let targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= allTasks.length) return;
+
+    const [movedTask] = allTasks.splice(index, 1);
+    allTasks.splice(targetIndex, 0, movedTask);
 
     const searchInput = document.getElementById('searchInput');
     const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
@@ -372,6 +395,32 @@ window.reorderTasks = async function(fromId, toId) {
     } else {
         renderTable(allTasks);
     }
+
+    await saveOrderToDB();
+};
+
+window.reorderTasks = async function(fromId, toId) {
+    if (!fromId || !toId || fromId === toId) return;
+    
+    const fromIndex = allTasks.findIndex(t => t.id.toString() === fromId.toString());
+    const toIndex = allTasks.findIndex(t => t.id.toString() === toId.toString());
+    if (fromIndex === -1 || toIndex === -1) return;
+
+    const [movedTask] = allTasks.splice(fromIndex, 1);
+    allTasks.splice(toIndex, 0, movedTask);
+
+    const searchInput = document.getElementById('searchInput');
+    const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+    if (searchTerm) {
+        renderTable(allTasks.filter(task => 
+            (task.ticketnumber || '').toLowerCase().includes(searchTerm) ||
+            (task.ordernumber || '').toLowerCase().includes(searchTerm)
+        ));
+    } else {
+        renderTable(allTasks);
+    }
+
+    await saveOrderToDB();
 };
 
 window.updateTaskField = async function(id, fieldName, element) {
@@ -474,8 +523,17 @@ async function addTask() {
         const todayString = new Date(new Date().getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().split('T')[0];
         
         if (selectedDateString !== todayString) {
+            let realNow = new Date();
             insertDate = new Date(selectedDateString);
-            insertDate.setHours(12, 0, 0, 0);
+            insertDate.setHours(realNow.getHours(), realNow.getMinutes(), realNow.getSeconds(), realNow.getMilliseconds());
+        }
+    }
+
+    // Damit neue Einträge immer ganz oben landen (bzw. oberhalb manuell verschobener Einträge)
+    if (allTasks.length > 0) {
+        let maxTime = Math.max(...allTasks.map(t => new Date(t.created_at).getTime()));
+        if (insertDate.getTime() <= maxTime) {
+            insertDate = new Date(maxTime + 1000); 
         }
     }
 
@@ -604,13 +662,11 @@ document.addEventListener("DOMContentLoaded", () => {
         defaultDate: new Date(),
         disableMobile: true,
         onChange: function() {
-            // Nur laden, wenn eingeloggt (wird durch UI abgedeckt)
             loadTasks();
             loadDailyInfo(); 
         }
     });
 
-    // Anstatt direkt zu laden, wird erst der Auth-Status geprüft!
     checkAuth(); 
     
     const searchInput = document.getElementById('searchInput');
