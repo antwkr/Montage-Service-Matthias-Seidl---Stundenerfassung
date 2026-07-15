@@ -5,6 +5,21 @@ const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let allTasks = [];
 
+// --- PRIORITÄTEN FÜR DIE AUTOMATISCHE SORTIERUNG ---
+function getTaskPriority(task) {
+    if (task.description && task.description.includes('LKW Pauschale')) return 1; // Immer ganz unten
+    switch(task.building) {
+        case 'B-BAU': return 10; // Immer ganz oben
+        case 'TCK3': return 9;
+        case 'TCK2': return 8;
+        case 'Haus 4': return 7;
+        case 'Haus 3': return 6;
+        case 'Haus 2': return 5;
+        case 'Haus 1': return 4;
+        default: return 2; // Restliche / leere Gebäude
+    }
+}
+
 // --- LOGIN & AUTHENTIFIZIERUNG ---
 async function checkAuth() {
     const { data: { session } } = await db.auth.getSession();
@@ -152,6 +167,8 @@ async function loadDailyInfo() {
 async function loadTasks() {
     const { start, end } = getSelectedDateRange();
     
+    // Wir laden die Aufgaben stur nach ihrem Datenbank-Zeitstempel.
+    // Das garantiert, dass manuelle Sortierungen immer erhalten bleiben!
     const { data: tasks, error } = await db
         .from('tasks') 
         .select('*')
@@ -166,19 +183,18 @@ async function loadTasks() {
 
     allTasks = tasks || [];
     
-    // B-BAU immer an die erste Stelle gruppieren, danach nach Zeit (bzw. nach manueller Sortierung) ordnen
-    allTasks.sort((a, b) => {
-        const isA = (a.building === 'B-BAU');
-        const isB = (b.building === 'B-BAU');
-        if (isA && !isB) return -1;
-        if (!isA && isB) return 1;
-        return new Date(b.created_at) - new Date(a.created_at);
-    });
-    
     const hasLkwPauschale = allTasks.some(t => t.description && t.description.includes('LKW Pauschale'));
     if (!hasLkwPauschale) {
-        let insertDate = new Date(start);
-        insertDate.setHours(6, 0, 0, 0); 
+        let lkwTime;
+        if (allTasks.length > 0) {
+            // Hänge es zeitlich exakt unter den bisher untersten Eintrag
+            lkwTime = new Date(new Date(allTasks[allTasks.length - 1].created_at).getTime() - 1000);
+        } else {
+            let shiftStart = new Date(start);
+            shiftStart.setHours(6, 0, 0, 0); 
+            lkwTime = shiftStart;
+        }
+
         const { data: newTask, error: insertError } = await db
             .from('tasks')
             .insert([{ 
@@ -188,20 +204,12 @@ async function loadTasks() {
                 description: 'LKW Pauschale',
                 ticketnumber: '',
                 hours: 0,
-                created_at: insertDate.toISOString()
+                created_at: lkwTime.toISOString()
             }])
             .select();
         
         if (!insertError && newTask && newTask.length > 0) {
             allTasks.push(newTask[0]);
-            
-            allTasks.sort((a, b) => {
-                const isA = (a.building === 'B-BAU');
-                const isB = (b.building === 'B-BAU');
-                if (isA && !isB) return -1;
-                if (!isA && isB) return 1;
-                return new Date(b.created_at) - new Date(a.created_at);
-            });
         }
     }
 
@@ -360,7 +368,7 @@ window.handleTouchDragEnd = function(e) {
     window.touchDraggedTaskId = null;
 };
 
-// Festes Speichern der Anordnung in der Datenbank (Sekundengenaue Abstufung)
+// Festes Speichern der Anordnung in der Datenbank (Zementiert die manuelle Reihenfolge)
 window.saveOrderToDB = async function() {
     let shiftDateStr = getCurrentShiftDateString();
     let baseDate = new Date(shiftDateStr);
@@ -368,7 +376,7 @@ window.saveOrderToDB = async function() {
 
     const updates = [];
     for (let i = 0; i < allTasks.length; i++) {
-        let newTime = new Date(baseDate.getTime() - i * 1000);
+        let newTime = new Date(baseDate.getTime() - i * 1000); // Exakt 1 Sekunde Abstand pro Zeile
         allTasks[i].created_at = newTime.toISOString();
         updates.push(db.from('tasks').update({ created_at: allTasks[i].created_at }).eq('id', allTasks[i].id));
     }
@@ -529,25 +537,46 @@ async function addTask() {
         }
     }
 
-    // Damit neue Einträge immer ganz oben landen (bzw. oberhalb manuell verschobener Einträge)
-    if (allTasks.length > 0) {
-        let maxTime = Math.max(...allTasks.map(t => new Date(t.created_at).getTime()));
-        if (insertDate.getTime() <= maxTime) {
-            insertDate = new Date(maxTime + 1000); 
+    let newTaskObj = {
+        ordernumber: inputOrderNumber,
+        besetzung: inputBesetzung,
+        building: inputBuilding, 
+        description: inputDescription, 
+        ticketnumber: inputTicket, 
+        hours: parsedHours
+    };
+
+    // --- MAGIE: Berechnet den perfekten Slot für den neuen Eintrag ---
+    const newPri = getTaskPriority(newTaskObj);
+    let insertIndex = 0;
+    // Wir suchen die Stelle, an die das neue Gebäude in der Hierarchie passt
+    for (let i = 0; i < allTasks.length; i++) {
+        if (getTaskPriority(allTasks[i]) >= newPri) {
+            insertIndex = i + 1;
         }
     }
 
+    let calculatedTime;
+    if (allTasks.length === 0) {
+        calculatedTime = insertDate;
+    } else if (insertIndex === 0) {
+        // Ganz oben (z.B. neues B-BAU): Zeitstempel +1 Sekunde über dem bisher obersten
+        calculatedTime = new Date(new Date(allTasks[0].created_at).getTime() + 1000);
+    } else if (insertIndex === allTasks.length) {
+        // Ganz unten: Zeitstempel -1 Sekunde unter dem bisher untersten
+        calculatedTime = new Date(new Date(allTasks[allTasks.length - 1].created_at).getTime() - 1000);
+    } else {
+        // Dazwischen: Ermittelt exakt die goldene Mitte (Zeit) zwischen den zwei Einträgen
+        const timeAbove = new Date(allTasks[insertIndex - 1].created_at).getTime();
+        const timeBelow = new Date(allTasks[insertIndex].created_at).getTime();
+        calculatedTime = new Date((timeAbove + timeBelow) / 2);
+    }
+    
+    newTaskObj.created_at = calculatedTime.toISOString();
+
     const { error } = await db
         .from('tasks')
-        .insert([{ 
-            ordernumber: inputOrderNumber,
-            besetzung: inputBesetzung,
-            building: inputBuilding, 
-            description: inputDescription, 
-            ticketnumber: inputTicket, 
-            hours: parsedHours,
-            created_at: insertDate.toISOString()
-        }]);
+        .insert([newTaskObj]);
 
     if (error) {
         alert("Datenbank-Fehler: " + error.message); 
