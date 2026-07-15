@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/x-icon" href="images/favicon.ico">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
     <title>Stundenerfassung - Fa. Seidl</title>
@@ -14,7 +13,7 @@
     <div id="login-screen" class="login-container">
         <div class="login-box">
             <img src="images/lgo_seidl.svg" alt="Firmenlogo" class="company-logo" style="margin-bottom: 30px; width: 140px;">
-            <h3 style="text-align: center; margin-bottom: 20px;">Login</h3>
+            <h3 style="text-align: center; margin-bottom: 20px;">Mitarbeiter Login</h3>
             
             <form id="login-form">
                 <div class="input-group" style="margin-bottom: 15px; text-align: left;">
@@ -34,126 +33,148 @@
     </div>
 
     <div id="app-screen" class="hidden">
+        
+        <div class="view-toggle hide-on-export">
+            <button id="btn-view-daily" class="tab-btn active">Tageserfassung</button>
+            <button id="btn-view-summary" class="tab-btn">Zusammenfassung</button>
+        </div>
+
         <div class="container">
             <div class="title-box">
                 <div class="title-text">
                     <h1>Montage-Service Matthias Seidl</h1>
                     <h3>Dienstleistungen rund um's Holz</h3>
-                    <h5>Fünfkirchenerstraße 43<br>85435 Erding<br>+49 177 6524819<br>m.seidl-schreiner@gmx.de</h5>
+                    <h5>Fünfkirchenerstraße 43<br>85435 Erding</h5>
                 </div>
                 <img src="images/lgo_seidl.svg" alt="Firmenlogo" class="company-logo">
             </div>
 
-            <div class="report-header">
-                <div class="input-group">
-                    <label for="client">Auftraggeber</label>
-                    <input type="text" id="client" value="Knorr Bremse München" placeholder="z.B. Max Mustermann">
-                </div>
-                <div class="input-group">
-                    <label for="workplace">Arbeitsstätte</label>
-                    <input type="text" id="workplace" value="Moosacher Str. 80" placeholder="z.B. Musterstraße 1">
-                </div>
-                <div class="input-group">
-                    <label for="reportnumber">Regiebericht Nr.</label>
-                    <input type="text" id="reportnumber" value="00">
-                </div>
-            </div>
-
-            <div class="task-form">
-                <div class="form-left">
-                    <div class="form-left-top">
-                        <div class="input-group">
-                            <label for="ordernumber">Bestellnr.</label>
-                            <input type="text" id="ordernumber" placeholder="z.B. 123456">
-                        </div>
-                        <div class="input-group">
-                            <label for="ticketnumber">Ticketnummer</label>
-                            <input type="text" id="ticketnumber" placeholder="z.B. 066.000.501.774">
-                        </div>
+            <div id="view-daily">
+                <div class="report-header">
+                    <div class="input-group">
+                        <label for="client">Auftraggeber</label>
+                        <input type="text" id="client" value="Knorr Bremse München" placeholder="z.B. Max Mustermann">
                     </div>
+                    <div class="input-group">
+                        <label for="workplace">Arbeitsstätte</label>
+                        <input type="text" id="workplace" value="Moosacher Str. 80" placeholder="z.B. Musterstraße 1">
+                    </div>
+                    <div class="input-group">
+                        <label for="reportnumber">Regiebericht Nr.</label>
+                        <input type="text" id="reportnumber" value="00">
+                    </div>
+                </div>
 
-                    <div class="form-left-bottom">
-                        <div class="input-group">
-                            <label>Gebäude</label>
-                            <div class="custom-select-wrapper">
-                                <div class="custom-select" id="building-display">Auswählen</div>
-                                <ul class="custom-options">
-                                    <li class="custom-option-header">TCK1</li>
-                                    <li class="custom-option selected" data-value="Haus 1">Haus 1</li>
-                                    <li class="custom-option" data-value="Haus 2">Haus 2</li>
-                                    <li class="custom-option" data-value="Haus 3">Haus 3</li>
-                                    <li class="custom-option" data-value="Haus 4">Haus 4</li>
-                                    
-                                    <li class="custom-option-header">Weitere Gebäude</li>
-                                    <li class="custom-option" data-value="TCK2">TCK2</li>
-                                    <li class="custom-option" data-value="TCK3">TCK3</li>
-                                    <li class="custom-option" data-value="B-BAU">B-BAU</li>
-                                    <li class="custom-option" data-value="WRS">WRS</li>
-                                </ul>
-                                <input type="hidden" id="building" value="Haus 1">
+                <div class="task-form">
+                    <div class="form-left">
+                        <div class="form-left-top">
+                            <div class="input-group">
+                                <label for="ordernumber">Bestellnr.</label>
+                                <input type="text" id="ordernumber" placeholder="z.B. 123456">
+                            </div>
+                            <div class="input-group">
+                                <label for="ticketnumber">Ticketnummer</label>
+                                <input type="text" id="ticketnumber" placeholder="z.B. 066.000.501.774">
                             </div>
                         </div>
 
-                        <div class="input-group">
-                            <label for="besetzung">Mann</label>
-                            <input type="text" id="besetzung">
+                        <div class="form-left-bottom">
+                            <div class="input-group">
+                                <label>Gebäude</label>
+                                <div class="custom-select-wrapper">
+                                    <div class="custom-select" id="building-display">Auswählen</div>
+                                    <ul class="custom-options">
+                                        <li class="custom-option-header">TCK1</li>
+                                        <li class="custom-option selected" data-value="Haus 1">Haus 1</li>
+                                        <li class="custom-option" data-value="Haus 2">Haus 2</li>
+                                        <li class="custom-option" data-value="Haus 3">Haus 3</li>
+                                        <li class="custom-option" data-value="Haus 4">Haus 4</li>
+                                        
+                                        <li class="custom-option-header">Weitere Gebäude</li>
+                                        <li class="custom-option" data-value="TCK2">TCK2</li>
+                                        <li class="custom-option" data-value="TCK3">TCK3</li>
+                                        <li class="custom-option" data-value="B-BAU">B-BAU</li>
+                                        <li class="custom-option" data-value="WRS">WRS</li>
+                                    </ul>
+                                    <input type="hidden" id="building" value="Haus 1">
+                                </div>
+                            </div>
+
+                            <div class="input-group">
+                                <label for="besetzung">Mann</label>
+                                <input type="text" id="besetzung">
+                            </div>
+
+                            <div class="input-group">
+                                <label for="hours">Std</label>
+                                <input type="number" id="hours" step="0.5" placeholder="0.0">
+                            </div>
                         </div>
+                    </div>
 
-                        <div class="input-group">
-                            <label for="hours">Std</label>
-                            <input type="number" id="hours" step="0.5" placeholder="0.0">
+                    <div class="form-right">
+                        <div class="input-group description-group">
+                            <label for="description">Beschreibung</label>
+                            <textarea id="description" placeholder="Was wurde gemacht?"></textarea>
                         </div>
                     </div>
                 </div>
+                
+                <div class="add">
+                    <button id="addTaskBtn" class="icon-btn icon-plus">Hinzufügen</button>
+                </div>
 
-                <div class="form-right">
-                    <div class="input-group description-group">
-                        <label for="description">Beschreibung</label>
-                        <textarea id="description" placeholder="Was wurde gemacht?"></textarea>
+                <div class="table-wrapper">
+                    <div class="table-header-bar">
+                        <div class="date-picker-box">
+                            <input type="text" id="datePicker">
+                        </div>
+                        <div class="search-box hide-on-export">
+                            <input type="text" id="searchInput" placeholder="Suchen">
+                        </div>
+                    </div>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Bestell Nr.</th>
+                                <th>Gebäude</th>
+                                <th>Beschreibung</th>
+                                <th>Ticketnummer</th>
+                                <th>Mann</th>
+                                <th>Std</th>
+                                <th>Gesamt</th>
+                                <th class="hide-on-export"></th> 
+                            </tr>
+                        </thead>
+                        <tbody id="taskTableBody">
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="signature-section hide-on-screen-optional">
+                    <div class="signature-box">
+                        <div class="signature-line"></div>
+                        <p>Unterschrift des Auftraggebers</p>
+                    </div>
+                    <div class="signature-box">
+                        <div class="signature-line"></div>
+                        <p>Unterschrift des Auftragnehmers</p>
                     </div>
                 </div>
             </div>
-            
-            <div class="add">
-                <button id="addTaskBtn" class="icon-btn icon-plus">Hinzufügen</button>
-            </div>
 
-            <div class="table-wrapper">
-                <div class="table-header-bar">
-                    <div class="date-picker-box">
-                        <input type="text" id="datePicker">
+            <div id="view-summary" class="hidden">
+                <div class="summary-controls hide-on-export">
+                    <div class="input-group" style="width: 300px;">
+                        <label>Zeitraum wählen</label>
+                        <input type="text" id="summaryDatePicker" placeholder="Vom - Bis">
                     </div>
-                    <div class="search-box hide-on-export">
-                        <input type="text" id="searchInput" placeholder="Suchen">
-                    </div>
+                    <button id="generateSummaryBtn" class="icon-btn">Daten laden</button>
                 </div>
-
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Bestell Nr.</th>
-                            <th>Gebäude</th>
-                            <th>Beschreibung</th>
-                            <th>Ticketnummer</th>
-                            <th>Mann</th>
-                            <th>Std</th>
-                            <th>Gesamt</th>
-                            <th class="hide-on-export"></th> 
-                        </tr>
-                    </thead>
-                    <tbody id="taskTableBody">
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="signature-section hide-on-screen-optional">
-                <div class="signature-box">
-                    <div class="signature-line"></div>
-                    <p>Unterschrift des Auftraggebers</p>
-                </div>
-                <div class="signature-box">
-                    <div class="signature-line"></div>
-                    <p>Unterschrift des Auftragnehmers</p>
+                
+                <div id="summaryContent" class="summary-content">
+                    <p class="summary-placeholder">Bitte wähle einen Zeitraum aus und klicke auf "Daten laden".</p>
                 </div>
             </div>
 

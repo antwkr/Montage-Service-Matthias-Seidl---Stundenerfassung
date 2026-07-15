@@ -5,22 +5,25 @@ const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let allTasks = [];
 
-// --- PRIORITÄTEN FÜR DIE AUTOMATISCHE SORTIERUNG ---
 function getTaskPriority(task) {
-    if (task.description && task.description.includes('LKW Pauschale')) return 1; // Immer ganz unten
+    if (task.description && task.description.includes('LKW Pauschale')) return 1; 
     switch(task.building) {
-        case 'B-BAU': return 10; // Immer ganz oben
+        case 'B-BAU': return 10;
         case 'TCK3': return 9;
         case 'TCK2': return 8;
         case 'Haus 4': return 7;
         case 'Haus 3': return 6;
         case 'Haus 2': return 5;
         case 'Haus 1': return 4;
-        default: return 2; // Restliche / leere Gebäude
+        default: return 2; 
     }
 }
 
-// --- LOGIN & AUTHENTIFIZIERUNG ---
+// Hilfsfunktion nur für den Gebäudenamen-String
+function getBuildingPriority(buildingName) {
+    return getTaskPriority({ building: buildingName, description: '' });
+}
+
 async function checkAuth() {
     const { data: { session } } = await db.auth.getSession();
     if (session) {
@@ -48,16 +51,11 @@ function getCurrentShiftDateString() {
     if (datePicker && datePicker.value) {
         return datePicker.value; 
     }
-
     let selectedDate = new Date();
-    if (selectedDate.getHours() < 6) {
-        selectedDate.setDate(selectedDate.getDate() - 1);
-    }
-
+    if (selectedDate.getHours() < 6) selectedDate.setDate(selectedDate.getDate() - 1);
     const yyyy = selectedDate.getFullYear();
     const mm = String(selectedDate.getMonth() + 1).padStart(2, '0');
     const dd = String(selectedDate.getDate()).padStart(2, '0');
-    
     return `${yyyy}-${mm}-${dd}`;
 }
 
@@ -65,14 +63,9 @@ function getSelectedDateRange() {
     let shiftDateStr = getCurrentShiftDateString();
     let shiftStart = new Date(shiftDateStr);
     shiftStart.setHours(6, 0, 0, 0);
-
     let shiftEnd = new Date(shiftStart);
     shiftEnd.setDate(shiftEnd.getDate() + 1);
-
-    return {
-        start: shiftStart.toISOString(),
-        end: shiftEnd.toISOString()
-    };
+    return { start: shiftStart.toISOString(), end: shiftEnd.toISOString() };
 }
 
 window.handleEnterKey = function(event) {
@@ -85,11 +78,9 @@ window.handleEnterKey = function(event) {
 window.toggleMobileRow = function(event) {
     if (window.innerWidth <= 768) {
         if (event.target.classList.contains('editable-field') || event.target.classList.contains('drag-handle')) return;
-        
         if (document.activeElement && typeof document.activeElement.blur === 'function') {
             document.activeElement.blur();
         }
-
         const tr = event.currentTarget.closest('tr');
         if(tr) tr.classList.toggle('expanded');
     }
@@ -106,22 +97,14 @@ window.saveDailyInfo = async function() {
     dailyInfoTimeout = setTimeout(async () => {
         const shiftDate = getCurrentShiftDateString();
         const reportNumberField = document.getElementById('reportnumber');
-        
         if (!reportNumberField) return;
 
-        const { data } = await db
-            .from('daily_info')
-            .select('date')
-            .eq('date', shiftDate)
-            .maybeSingle();
+        const { data } = await db.from('daily_info').select('date').eq('date', shiftDate).maybeSingle();
 
         if (data) {
-            await db.from('daily_info')
-                .update({ reportnumber: reportNumberField.value })
-                .eq('date', shiftDate);
+            await db.from('daily_info').update({ reportnumber: reportNumberField.value }).eq('date', shiftDate);
         } else {
-            await db.from('daily_info')
-                .insert([{ date: shiftDate, reportnumber: reportNumberField.value }]);
+            await db.from('daily_info').insert([{ date: shiftDate, reportnumber: reportNumberField.value }]);
         }
     }, 500);
 };
@@ -129,37 +112,21 @@ window.saveDailyInfo = async function() {
 async function loadDailyInfo() {
     const shiftDate = getCurrentShiftDateString();
     const reportNumberField = document.getElementById('reportnumber');
-    
     if (!reportNumberField) return;
 
-    const { data, error } = await db
-        .from('daily_info')
-        .select('*')
-        .eq('date', shiftDate)
-        .maybeSingle();
+    const { data, error } = await db.from('daily_info').select('*').eq('date', shiftDate).maybeSingle();
 
     if (data) {
         reportNumberField.value = data.reportnumber || '';
     } else {
-        const { data: lastData } = await db
-            .from('daily_info')
-            .select('reportnumber')
-            .lt('date', shiftDate) 
-            .order('date', { ascending: false })
-            .limit(1)
-            .maybeSingle();
-            
+        const { data: lastData } = await db.from('daily_info').select('reportnumber').lt('date', shiftDate).order('date', { ascending: false }).limit(1).maybeSingle();
         if (lastData && lastData.reportnumber) {
             let lastNum = parseInt(lastData.reportnumber, 10);
-            if (!isNaN(lastNum)) {
-                reportNumberField.value = (lastNum + 1).toString().padStart(lastData.reportnumber.length, '0');
-            } else {
-                reportNumberField.value = lastData.reportnumber; 
-            }
+            if (!isNaN(lastNum)) reportNumberField.value = (lastNum + 1).toString().padStart(lastData.reportnumber.length, '0');
+            else reportNumberField.value = lastData.reportnumber; 
         } else {
             reportNumberField.value = "71"; 
         }
-        
         saveDailyInfo();
     }
 }
@@ -167,61 +134,33 @@ async function loadDailyInfo() {
 async function loadTasks() {
     const { start, end } = getSelectedDateRange();
     
-    // Wir laden die Aufgaben stur nach ihrem Datenbank-Zeitstempel.
-    // Das garantiert, dass manuelle Sortierungen immer erhalten bleiben!
-    const { data: tasks, error } = await db
-        .from('tasks') 
-        .select('*')
-        .gte('created_at', start)
-        .lt('created_at', end)
-        .order('created_at', { ascending: false });
+    const { data: tasks, error } = await db.from('tasks').select('*')
+        .gte('created_at', start).lt('created_at', end).order('created_at', { ascending: false });
 
-    if (error) {
-        console.error(error);
-        return;
-    }
-
+    if (error) { console.error(error); return; }
     allTasks = tasks || [];
     
     const hasLkwPauschale = allTasks.some(t => t.description && t.description.includes('LKW Pauschale'));
     if (!hasLkwPauschale) {
         let lkwTime;
         if (allTasks.length > 0) {
-            // Hänge es zeitlich exakt unter den bisher untersten Eintrag
             lkwTime = new Date(new Date(allTasks[allTasks.length - 1].created_at).getTime() - 1000);
         } else {
             let shiftStart = new Date(start);
             shiftStart.setHours(6, 0, 0, 0); 
             lkwTime = shiftStart;
         }
-
-        const { data: newTask, error: insertError } = await db
-            .from('tasks')
-            .insert([{ 
-                ordernumber: '',
-                besetzung: '',
-                building: '',
-                description: 'LKW Pauschale',
-                ticketnumber: '',
-                hours: 0,
-                created_at: lkwTime.toISOString()
-            }])
-            .select();
+        const { data: newTask, error: insertError } = await db.from('tasks')
+            .insert([{ ordernumber: '', besetzung: '', building: '', description: 'LKW Pauschale', ticketnumber: '', hours: 0, created_at: lkwTime.toISOString() }]).select();
         
-        if (!insertError && newTask && newTask.length > 0) {
-            allTasks.push(newTask[0]);
-        }
+        if (!insertError && newTask && newTask.length > 0) allTasks.push(newTask[0]);
     }
 
     const searchInput = document.getElementById('searchInput');
     const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
     
     if (searchTerm) {
-        const filteredTasks = allTasks.filter(task => 
-            (task.ticketnumber || '').toLowerCase().includes(searchTerm) ||
-            (task.ordernumber || '').toLowerCase().includes(searchTerm)
-        );
-        renderTable(filteredTasks);
+        renderTable(allTasks.filter(t => (t.ticketnumber || '').toLowerCase().includes(searchTerm) || (t.ordernumber || '').toLowerCase().includes(searchTerm)));
     } else {
         renderTable(allTasks);
     }
@@ -231,7 +170,6 @@ function renderTable(tasksArray) {
     const tableBody = document.getElementById('taskTableBody');
     const tableElement = tableBody.parentElement; 
     tableBody.innerHTML = '';
-    
     let totalHours = 0; 
 
     tasksArray.forEach(task => {
@@ -240,9 +178,7 @@ function renderTable(tasksArray) {
         const parsedMann = parseFloat(task.besetzung);
         const mannCount = isNaN(parsedMann) || parsedMann <= 0 ? 1 : parsedMann;
         
-        if (!isLkw) {
-            totalHours += (taskHours * mannCount);
-        }
+        if (!isLkw) totalHours += (taskHours * mannCount);
 
         const formattedHours = isLkw ? '' : (taskHours > 0 ? taskHours.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : '0,0');
         const formattedGesamt = isLkw ? '' : (taskHours * mannCount).toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
@@ -269,9 +205,7 @@ function renderTable(tasksArray) {
                     <button class="icon-btn icon-grip table-action-btn drag-handle" title="Verschieben" 
                         onmousedown="this.closest('tr').setAttribute('draggable', 'true')" 
                         onmouseup="this.closest('tr').setAttribute('draggable', 'false')"
-                        ontouchstart="handleTouchDragStart(event, '${task.id}')"
-                        ontouchmove="handleTouchDragMove(event)"
-                        ontouchend="handleTouchDragEnd(event)"></button>
+                        ontouchstart="handleTouchDragStart(event, '${task.id}')" ontouchmove="handleTouchDragMove(event)" ontouchend="handleTouchDragEnd(event)"></button>
                     <button onclick="deleteSingleTask('${task.id}')" class="delete-btn icon-btn icon-trash table-action-btn table-delete-btn" title="Löschen"><span class="delete-text">Löschen</span></button>
                 </div>
             </td>
@@ -283,47 +217,27 @@ function renderTable(tasksArray) {
             setTimeout(() => row.classList.add('dragging'), 0);
         });
         row.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
-            row.classList.add('drag-over');
+            e.preventDefault(); e.dataTransfer.dropEffect = 'move'; row.classList.add('drag-over');
         });
-        row.addEventListener('dragleave', () => {
-            row.classList.remove('drag-over');
-        });
+        row.addEventListener('dragleave', () => row.classList.remove('drag-over'));
         row.addEventListener('drop', (e) => {
-            e.preventDefault();
-            row.classList.remove('drag-over');
-            if (window.draggedTaskId && window.draggedTaskId !== task.id) {
-                reorderTasks(window.draggedTaskId, task.id);
-            }
+            e.preventDefault(); row.classList.remove('drag-over');
+            if (window.draggedTaskId && window.draggedTaskId !== task.id) reorderTasks(window.draggedTaskId, task.id);
         });
         row.addEventListener('dragend', () => {
-            row.classList.remove('dragging');
-            row.setAttribute('draggable', 'false');
+            row.classList.remove('dragging'); row.setAttribute('draggable', 'false');
         });
 
         tableBody.appendChild(row);
     });
 
     let tfoot = tableElement.querySelector('tfoot');
-    if (!tfoot) {
-        tfoot = document.createElement('tfoot');
-        tableElement.appendChild(tfoot);
-    }
+    if (!tfoot) { tfoot = document.createElement('tfoot'); tableElement.appendChild(tfoot); }
 
     if (tasksArray.length > 0) {
-        const formattedTotal = totalHours.toLocaleString('de-DE', { 
-            minimumFractionDigits: 1, 
-            maximumFractionDigits: 1 
-        });
-
-        tfoot.innerHTML = `
-            <tr>
-                <td colspan="8" style="text-align: right; font-weight: 800; border-top: 2px solid #1f2937; padding-top: 15px;">
-                    4 Mann, 9 Std. inkl An- und Abfahrt: <span style="margin-left: 15px;">${formattedTotal} Std.</span>
-                </td>
-            </tr>
-        `;
+        const formattedTotal = totalHours.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+        tfoot.innerHTML = `<tr><td colspan="8" style="text-align: right; font-weight: 800; border-top: 2px solid #1f2937; padding-top: 15px;">
+            4 Mann, 9 Std. inkl An- und Abfahrt: <span style="margin-left: 15px;">${formattedTotal} Std.</span></td></tr>`;
     } else {
         tfoot.innerHTML = '';
     }
@@ -342,9 +256,7 @@ window.handleTouchDragMove = function(e) {
     const targetTr = elem ? elem.closest('tr') : null;
     
     document.querySelectorAll('tr.drag-over').forEach(r => r.classList.remove('drag-over'));
-    if (targetTr && targetTr.getAttribute('data-task-id') !== window.touchDraggedTaskId.toString()) {
-        targetTr.classList.add('drag-over');
-    }
+    if (targetTr && targetTr.getAttribute('data-task-id') !== window.touchDraggedTaskId.toString()) targetTr.classList.add('drag-over');
 };
 
 window.handleTouchDragEnd = function(e) {
@@ -354,21 +266,16 @@ window.handleTouchDragEnd = function(e) {
     const targetTr = elem ? elem.closest('tr') : null;
     
     document.querySelectorAll('tr.dragging, tr.drag-over').forEach(r => {
-        r.classList.remove('dragging');
-        r.classList.remove('drag-over');
-        r.setAttribute('draggable', 'false');
+        r.classList.remove('dragging'); r.classList.remove('drag-over'); r.setAttribute('draggable', 'false');
     });
 
     if (targetTr) {
         const targetTaskId = targetTr.getAttribute('data-task-id');
-        if (targetTaskId && targetTaskId !== window.touchDraggedTaskId.toString()) {
-            reorderTasks(window.touchDraggedTaskId, targetTaskId);
-        }
+        if (targetTaskId && targetTaskId !== window.touchDraggedTaskId.toString()) reorderTasks(window.touchDraggedTaskId, targetTaskId);
     }
     window.touchDraggedTaskId = null;
 };
 
-// Festes Speichern der Anordnung in der Datenbank (Zementiert die manuelle Reihenfolge)
 window.saveOrderToDB = async function() {
     let shiftDateStr = getCurrentShiftDateString();
     let baseDate = new Date(shiftDateStr);
@@ -376,7 +283,7 @@ window.saveOrderToDB = async function() {
 
     const updates = [];
     for (let i = 0; i < allTasks.length; i++) {
-        let newTime = new Date(baseDate.getTime() - i * 1000); // Exakt 1 Sekunde Abstand pro Zeile
+        let newTime = new Date(baseDate.getTime() - i * 1000); 
         allTasks[i].created_at = newTime.toISOString();
         updates.push(db.from('tasks').update({ created_at: allTasks[i].created_at }).eq('id', allTasks[i].id));
     }
@@ -386,30 +293,21 @@ window.saveOrderToDB = async function() {
 window.moveTask = async function(id, direction) {
     const index = allTasks.findIndex(t => t.id.toString() === id.toString());
     if (index === -1) return;
-
     let targetIndex = direction === 'up' ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= allTasks.length) return;
 
     const [movedTask] = allTasks.splice(index, 1);
     allTasks.splice(targetIndex, 0, movedTask);
 
-    const searchInput = document.getElementById('searchInput');
-    const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
-    if (searchTerm) {
-        renderTable(allTasks.filter(task => 
-            (task.ticketnumber || '').toLowerCase().includes(searchTerm) ||
-            (task.ordernumber || '').toLowerCase().includes(searchTerm)
-        ));
-    } else {
-        renderTable(allTasks);
-    }
+    const searchTerm = document.getElementById('searchInput') ? document.getElementById('searchInput').value.toLowerCase() : '';
+    if (searchTerm) renderTable(allTasks.filter(t => (t.ticketnumber || '').toLowerCase().includes(searchTerm) || (t.ordernumber || '').toLowerCase().includes(searchTerm)));
+    else renderTable(allTasks);
 
     await saveOrderToDB();
 };
 
 window.reorderTasks = async function(fromId, toId) {
     if (!fromId || !toId || fromId === toId) return;
-    
     const fromIndex = allTasks.findIndex(t => t.id.toString() === fromId.toString());
     const toIndex = allTasks.findIndex(t => t.id.toString() === toId.toString());
     if (fromIndex === -1 || toIndex === -1) return;
@@ -417,32 +315,21 @@ window.reorderTasks = async function(fromId, toId) {
     const [movedTask] = allTasks.splice(fromIndex, 1);
     allTasks.splice(toIndex, 0, movedTask);
 
-    const searchInput = document.getElementById('searchInput');
-    const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
-    if (searchTerm) {
-        renderTable(allTasks.filter(task => 
-            (task.ticketnumber || '').toLowerCase().includes(searchTerm) ||
-            (task.ordernumber || '').toLowerCase().includes(searchTerm)
-        ));
-    } else {
-        renderTable(allTasks);
-    }
+    const searchTerm = document.getElementById('searchInput') ? document.getElementById('searchInput').value.toLowerCase() : '';
+    if (searchTerm) renderTable(allTasks.filter(t => (t.ticketnumber || '').toLowerCase().includes(searchTerm) || (t.ordernumber || '').toLowerCase().includes(searchTerm)));
+    else renderTable(allTasks);
 
     await saveOrderToDB();
 };
 
 window.updateTaskField = async function(id, fieldName, element) {
     let newText = element.innerText.trim();
-    
     let task = allTasks.find(t => t.id.toString() === id.toString());
     if (!task) return;
 
     let valueToSave = newText;
-
     if (fieldName === 'hours') {
-        const mathFormat = valueToSave.replace(',', '.');
-        valueToSave = parseFloat(mathFormat);
-
+        valueToSave = parseFloat(valueToSave.replace(',', '.'));
         if (isNaN(valueToSave) && newText !== '') {
             alert("Bitte eine gültige Zahl eingeben!");
             element.innerText = task.hours ? task.hours.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : '';
@@ -451,59 +338,37 @@ window.updateTaskField = async function(id, fieldName, element) {
         if (newText === '' || isNaN(valueToSave)) valueToSave = 0;
     }
 
-    let oldValue = task[fieldName];
-    if (oldValue === null || oldValue === undefined) oldValue = '';
-    
-    if (fieldName === 'hours') {
-        if (parseFloat(oldValue || 0) === valueToSave) return;
-    } else {
-        if (oldValue.toString() === valueToSave) return;
-    }
+    let oldValue = task[fieldName] || '';
+    if (fieldName === 'hours') { if (parseFloat(oldValue || 0) === valueToSave) return; }
+    else { if (oldValue.toString() === valueToSave) return; }
 
-    const updateData = {};
-    updateData[fieldName] = valueToSave;
-
+    const updateData = {}; updateData[fieldName] = valueToSave;
     const { error } = await db.from('tasks').update(updateData).eq('id', id);
 
-    if (error) {
-        alert("Fehler beim Aktualisieren!");
-    } else {
+    if (error) alert("Fehler beim Aktualisieren!");
+    else {
         task[fieldName] = valueToSave;
-
-        if (fieldName === 'hours') {
-            element.innerText = valueToSave > 0 ? valueToSave.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : '0,0';
-        }
+        if (fieldName === 'hours') element.innerText = valueToSave > 0 ? valueToSave.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : '0,0';
         
         if (fieldName === 'hours' || fieldName === 'besetzung') {
             const h = parseFloat(task.hours || 0);
             const parsedM = parseFloat(task.besetzung);
             const m = isNaN(parsedM) || parsedM <= 0 ? 1 : parsedM;
             const gesamtSpan = document.getElementById(`gesamt-${task.id}`);
-            if (gesamtSpan) {
-                gesamtSpan.innerText = (h * m).toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-            }
+            if (gesamtSpan) gesamtSpan.innerText = (h * m).toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
             let totalHours = allTasks.reduce((sum, t) => {
-                const isLkw = t.description && t.description.includes('LKW Pauschale');
-                if (isLkw) return sum;
+                if (t.description && t.description.includes('LKW Pauschale')) return sum;
                 const h = parseFloat(t.hours || 0);
-                const parsedM = parseFloat(t.besetzung);
-                const m = isNaN(parsedM) || parsedM <= 0 ? 1 : parsedM;
-                return sum + (h * m);
+                const pM = parseFloat(t.besetzung);
+                const mM = isNaN(pM) || pM <= 0 ? 1 : pM;
+                return sum + (h * mM);
             }, 0);
             
             const formattedTotal = totalHours.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-            
             const tfoot = document.querySelector('tfoot');
-            if (tfoot) {
-                tfoot.innerHTML = `
-                    <tr>
-                        <td colspan="8" style="text-align: right; font-weight: 800; border-top: 2px solid #1f2937; padding-top: 15px;">
-                            Gesamtarbeitszeit: <span style="margin-left: 15px;">${formattedTotal} Std.</span>
-                        </td>
-                    </tr>
-                `;
-            }
+            if (tfoot) tfoot.innerHTML = `<tr><td colspan="8" style="text-align: right; font-weight: 800; border-top: 2px solid #1f2937; padding-top: 15px;">
+                Gesamtarbeitszeit: <span style="margin-left: 15px;">${formattedTotal} Std.</span></td></tr>`;
         }
     }
 };
@@ -516,20 +381,15 @@ async function addTask() {
     const inputTicket = document.getElementById('ticketnumber').value; 
     const inputHours = document.getElementById('hours').value;
 
-    if (!inputDescription) {
-        alert("Bitte eine Beschreibung ausfüllen!");
-        return;
-    }
+    if (!inputDescription) { alert("Bitte eine Beschreibung ausfüllen!"); return; }
 
     const parsedHours = parseFloat(inputHours) || 0;
-
     const datePicker = document.getElementById('datePicker');
     let insertDate = new Date();
     
     if (datePicker && datePicker.value) {
         const selectedDateString = datePicker.value;
         const todayString = new Date(new Date().getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().split('T')[0];
-        
         if (selectedDateString !== todayString) {
             let realNow = new Date();
             insertDate = new Date(selectedDateString);
@@ -538,57 +398,36 @@ async function addTask() {
     }
 
     let newTaskObj = {
-        ordernumber: inputOrderNumber,
-        besetzung: inputBesetzung,
-        building: inputBuilding, 
-        description: inputDescription, 
-        ticketnumber: inputTicket, 
-        hours: parsedHours
+        ordernumber: inputOrderNumber, besetzung: inputBesetzung, building: inputBuilding, 
+        description: inputDescription, ticketnumber: inputTicket, hours: parsedHours
     };
 
-    // --- MAGIE: Berechnet den perfekten Slot für den neuen Eintrag ---
     const newPri = getTaskPriority(newTaskObj);
     let insertIndex = 0;
-    // Wir suchen die Stelle, an die das neue Gebäude in der Hierarchie passt
     for (let i = 0; i < allTasks.length; i++) {
-        if (getTaskPriority(allTasks[i]) >= newPri) {
-            insertIndex = i + 1;
-        }
+        if (getTaskPriority(allTasks[i]) >= newPri) insertIndex = i + 1;
     }
 
     let calculatedTime;
-    if (allTasks.length === 0) {
-        calculatedTime = insertDate;
-    } else if (insertIndex === 0) {
-        // Ganz oben (z.B. neues B-BAU): Zeitstempel +1 Sekunde über dem bisher obersten
-        calculatedTime = new Date(new Date(allTasks[0].created_at).getTime() + 1000);
-    } else if (insertIndex === allTasks.length) {
-        // Ganz unten: Zeitstempel -1 Sekunde unter dem bisher untersten
-        calculatedTime = new Date(new Date(allTasks[allTasks.length - 1].created_at).getTime() - 1000);
-    } else {
-        // Dazwischen: Ermittelt exakt die goldene Mitte (Zeit) zwischen den zwei Einträgen
+    if (allTasks.length === 0) calculatedTime = insertDate;
+    else if (insertIndex === 0) calculatedTime = new Date(new Date(allTasks[0].created_at).getTime() + 1000);
+    else if (insertIndex === allTasks.length) calculatedTime = new Date(new Date(allTasks[allTasks.length - 1].created_at).getTime() - 1000);
+    else {
         const timeAbove = new Date(allTasks[insertIndex - 1].created_at).getTime();
         const timeBelow = new Date(allTasks[insertIndex].created_at).getTime();
         calculatedTime = new Date((timeAbove + timeBelow) / 2);
     }
-    
     newTaskObj.created_at = calculatedTime.toISOString();
 
-    const { error } = await db
-        .from('tasks')
-        .insert([newTaskObj]);
-
-    if (error) {
-        alert("Datenbank-Fehler: " + error.message); 
-    } else {
+    const { error } = await db.from('tasks').insert([newTaskObj]);
+    if (error) alert("Datenbank-Fehler: " + error.message); 
+    else {
         document.getElementById('ordernumber').value = '';
         document.getElementById('besetzung').value = '';
         document.getElementById('description').value = '';
         document.getElementById('ticketnumber').value = '';
         document.getElementById('hours').value = '';
-        
         document.getElementById('ordernumber').focus();
-
         loadTasks(); 
     }
 }
@@ -601,53 +440,133 @@ window.deleteSingleTask = async function(id) {
 
 function printPage() {
     const originalTitle = document.title;
-    const datePicker = document.getElementById('datePicker');
-    let exportDate = new Date();
     
-    if (datePicker && datePicker.value) {
-        exportDate = new Date(datePicker.value);
+    // Check which view is active
+    if (!document.getElementById('view-summary').classList.contains('hidden')) {
+        document.title = `Zusammenfassung_Fa_Seidl`;
+    } else {
+        const datePicker = document.getElementById('datePicker');
+        let exportDate = new Date();
+        if (datePicker && datePicker.value) exportDate = new Date(datePicker.value);
+        const dd = String(exportDate.getDate()).padStart(2, '0');
+        const mm = String(exportDate.getMonth() + 1).padStart(2, '0');
+        const yyyy = exportDate.getFullYear();
+        document.title = `${dd}-${mm}-${yyyy}_Stundenerfassung_KB`;
     }
-
-    const dd = String(exportDate.getDate()).padStart(2, '0');
-    const mm = String(exportDate.getMonth() + 1).padStart(2, '0');
-    const yyyy = exportDate.getFullYear();
-    
-    document.title = `${dd}-${mm}-${yyyy}_Stundenerfassung_KB`;
     
     window.print();
-    
     document.title = originalTitle;
 }
 
-const selectWrapper = document.querySelector('.custom-select-wrapper');
-if(selectWrapper) {
-    const displayBox = selectWrapper.querySelector('.custom-select');
-    const options = selectWrapper.querySelectorAll('.custom-option');
-    const hiddenInput = document.getElementById('building');
+// --- LOGIK FÜR DIE ZUSAMMENFASSUNG ---
+async function generateSummary() {
+    const summaryPicker = document.getElementById('summaryDatePicker').value;
+    const contentDiv = document.getElementById('summaryContent');
+    
+    if (!summaryPicker || !summaryPicker.includes(' bis ')) {
+        contentDiv.innerHTML = '<p class="summary-placeholder" style="color: var(--delete-text);">Bitte wähle einen gültigen Datumsbereich (Von - Bis).</p>';
+        return;
+    }
 
-    displayBox.addEventListener('click', () => {
-        displayBox.classList.toggle('open');
-    });
+    const dates = summaryPicker.split(' bis ');
+    let startIso = new Date(dates[0]); startIso.setHours(0,0,0,0);
+    let endIso = new Date(dates[1]); endIso.setHours(23,59,59,999);
 
-    options.forEach(option => {
-        option.addEventListener('click', () => {
-            options.forEach(opt => opt.classList.remove('selected'));
-            option.classList.add('selected');
-            displayBox.innerText = option.getAttribute('data-value');
-            hiddenInput.value = option.getAttribute('data-value');
-            displayBox.classList.remove('open');
-        });
-    });
+    contentDiv.innerHTML = '<p class="summary-placeholder">Lade Daten...</p>';
 
-    document.addEventListener('click', (e) => {
-        if (!selectWrapper.contains(e.target)) {
-            displayBox.classList.remove('open');
+    const { data: rawTasks, error } = await db.from('tasks').select('*')
+        .gte('created_at', startIso.toISOString())
+        .lte('created_at', endIso.toISOString());
+
+    if (error) {
+        contentDiv.innerHTML = `<p class="summary-placeholder" style="color: red;">Fehler: ${error.message}</p>`;
+        return;
+    }
+
+    if (!rawTasks || rawTasks.length === 0) {
+        contentDiv.innerHTML = '<p class="summary-placeholder">Keine Einträge in diesem Zeitraum gefunden.</p>';
+        return;
+    }
+
+    // 1. Gruppierung nach Bestellnummer und Gebäude
+    let groupedData = {};
+    
+    rawTasks.forEach(task => {
+        if (task.description && task.description.includes('LKW Pauschale')) return; // Pauschale in Summary ignorieren
+
+        let orderNum = (task.ordernumber || '').trim();
+        if (!orderNum) orderNum = "Ohne Bestellnummer";
+
+        let building = (task.building || '').trim();
+        if (!building) building = "Ohne Gebäude";
+
+        let tNumber = (task.ticketnumber || '').trim();
+        
+        let h = parseFloat(task.hours) || 0;
+        let b = parseFloat(task.besetzung);
+        let m = isNaN(b) || b <= 0 ? 1 : b;
+        let gesamtStd = h * m;
+
+        if (!groupedData[orderNum]) groupedData[orderNum] = {};
+        if (!groupedData[orderNum][building]) {
+            groupedData[orderNum][building] = {
+                tickets: new Set(),
+                totalHours: 0
+            };
         }
+
+        if (tNumber) groupedData[orderNum][building].tickets.add(tNumber);
+        groupedData[orderNum][building].totalHours += gesamtStd;
     });
+
+    // 2. HTML Generieren
+    let htmlOutput = '';
+    
+    const orderNumbers = Object.keys(groupedData).sort();
+    
+    orderNumbers.forEach(orderNum => {
+        htmlOutput += `
+            <div class="summary-block">
+                <h3 class="summary-title">Bestellnummer: <span>${orderNum}</span></h3>
+                <table class="summary-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 25%;">Gebäude</th>
+                            <th style="width: 55%;">Ticketnummern</th>
+                            <th style="width: 20%; text-align: right;">Gesamtstunden</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        // Gebäude sortieren nach unserer Prio-Regel
+        const buildings = Object.keys(groupedData[orderNum]).sort((a, b) => {
+            return getBuildingPriority(b) - getBuildingPriority(a);
+        });
+
+        buildings.forEach(bName => {
+            let info = groupedData[orderNum][bName];
+            let ticketsStr = Array.from(info.tickets).join(', ') || '-';
+            let formattedHrs = info.totalHours.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+            
+            htmlOutput += `
+                <tr>
+                    <td style="font-weight: 600;">${bName}</td>
+                    <td>${ticketsStr}</td>
+                    <td style="text-align: right; font-weight: 600;">${formattedHrs} Std.</td>
+                </tr>
+            `;
+        });
+
+        htmlOutput += `</tbody></table></div>`;
+    });
+
+    contentDiv.innerHTML = htmlOutput;
 }
 
-document.addEventListener("DOMContentLoaded", () => {
 
+document.addEventListener("DOMContentLoaded", () => {
+    // Auth & Basic Events
     const loginForm = document.getElementById('login-form');
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
@@ -656,48 +575,52 @@ document.addEventListener("DOMContentLoaded", () => {
             const password = document.getElementById('login-password').value;
             const errorDiv = document.getElementById('login-error');
             errorDiv.innerText = "";
-
-            const { data, error } = await db.auth.signInWithPassword({
-                email: email,
-                password: password,
-            });
-
-            if (error) {
-                errorDiv.innerText = "Falsche E-Mail oder Passwort.";
-            } else {
-                showApp();
-            }
+            const { data, error } = await db.auth.signInWithPassword({ email: email, password: password });
+            if (error) errorDiv.innerText = "Falsche E-Mail oder Passwort.";
+            else showApp();
         });
     }
 
     const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', async () => {
-            await db.auth.signOut();
-            showLogin();
-        });
-    }
+    if (logoutBtn) logoutBtn.addEventListener('click', async () => { await db.auth.signOut(); showLogin(); });
 
     const reportNumberField = document.getElementById('reportnumber');
-    if (reportNumberField) {
-        reportNumberField.addEventListener('input', saveDailyInfo);
-    }
+    if (reportNumberField) reportNumberField.addEventListener('input', saveDailyInfo);
 
+    // Flatpickr für Tagesansicht
     flatpickr("#datePicker", {
-        locale: "de",
-        dateFormat: "Y-m-d",
-        altInput: true,
-        altFormat: "d.m.Y",
-        defaultDate: new Date(),
-        disableMobile: true,
-        onChange: function() {
-            loadTasks();
-            loadDailyInfo(); 
-        }
+        locale: "de", dateFormat: "Y-m-d", altInput: true, altFormat: "d.m.Y",
+        defaultDate: new Date(), disableMobile: true,
+        onChange: function() { loadTasks(); loadDailyInfo(); }
+    });
+
+    // Flatpickr für Zusammenfassung (Range)
+    flatpickr("#summaryDatePicker", {
+        locale: "de", mode: "range", dateFormat: "Y-m-d", altInput: true, altFormat: "d.m.Y", disableMobile: true
     });
 
     checkAuth(); 
     
+    // Tab Switching Logic
+    const btnDaily = document.getElementById('btn-view-daily');
+    const btnSummary = document.getElementById('btn-view-summary');
+    const viewDaily = document.getElementById('view-daily');
+    const viewSummary = document.getElementById('view-summary');
+
+    if(btnDaily && btnSummary) {
+        btnDaily.addEventListener('click', () => {
+            btnDaily.classList.add('active'); btnSummary.classList.remove('active');
+            viewDaily.classList.remove('hidden'); viewSummary.classList.add('hidden');
+        });
+        btnSummary.addEventListener('click', () => {
+            btnSummary.classList.add('active'); btnDaily.classList.remove('active');
+            viewSummary.classList.remove('hidden'); viewDaily.classList.add('hidden');
+        });
+    }
+
+    const generateSumBtn = document.getElementById('generateSummaryBtn');
+    if(generateSumBtn) generateSumBtn.addEventListener('click', generateSummary);
+
     const searchInput = document.getElementById('searchInput');
     if (searchInput) {
         searchInput.addEventListener('input', (e) => {
@@ -716,13 +639,32 @@ document.addEventListener("DOMContentLoaded", () => {
     const taskForm = document.querySelector('.task-form');
     if (taskForm) {
         taskForm.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
-                e.preventDefault(); 
-                addTask();
-            }
+            if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') { e.preventDefault(); addTask(); }
         });
     }
 
     const printBtn = document.getElementById('printBtn');
     if (printBtn) printBtn.addEventListener('click', printPage);
+
+    // Dropdowns
+    const selectWrapper = document.querySelector('.custom-select-wrapper');
+    if(selectWrapper) {
+        const displayBox = selectWrapper.querySelector('.custom-select');
+        const options = selectWrapper.querySelectorAll('.custom-option');
+        const hiddenInput = document.getElementById('building');
+
+        displayBox.addEventListener('click', () => displayBox.classList.toggle('open'));
+        options.forEach(option => {
+            option.addEventListener('click', () => {
+                options.forEach(opt => opt.classList.remove('selected'));
+                option.classList.add('selected');
+                displayBox.innerText = option.getAttribute('data-value');
+                hiddenInput.value = option.getAttribute('data-value');
+                displayBox.classList.remove('open');
+            });
+        });
+        document.addEventListener('click', (e) => {
+            if (!selectWrapper.contains(e.target)) displayBox.classList.remove('open');
+        });
+    }
 });
