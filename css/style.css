@@ -471,6 +471,7 @@ tr.drag-over {
 .date-picker-box input {
     padding: 0px;
     padding-top: 22px;
+    padding-bottom: 22px;
     border-radius: var(--border-radius);
     border: 0px;
     background-color: transparent;

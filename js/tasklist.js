@@ -5,6 +5,7 @@ const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let allTasks = [];
 let orderTasks = [];
+let currentOrderLoadId = 0; 
 
 function getTaskPriority(task) {
     if (task.description && task.description.includes('LKW Pauschale')) return 1; 
@@ -484,22 +485,43 @@ async function loadOrderTasks() {
     const orderNum = document.getElementById('orderNumberInput').value.trim();
     const tableBody = document.getElementById('orderTableBody');
     const tableFoot = document.getElementById('orderTableFoot');
-    tableBody.innerHTML = '';
-    tableFoot.innerHTML = '';
-    if (!orderNum) return;
+    
+    if (!orderNum) {
+        tableBody.innerHTML = '';
+        tableFoot.innerHTML = '';
+        orderTasks = [];
+        return;
+    }
+
+    const loadId = ++currentOrderLoadId;
+
     const { data, error } = await db.from('order_tasks').select('*').eq('ordernumber', orderNum).order('date', { ascending: false });
+    
+    if (loadId !== currentOrderLoadId) return;
+
     if (error) {
         console.error(error);
         return;
     }
+
+    tableBody.innerHTML = '';
+    tableFoot.innerHTML = '';
     orderTasks = data || [];
     let totalHours = 0;
+
     orderTasks.forEach(task => {
         const h = parseFloat(task.hours) || 0;
         totalHours += h;
         let dateObj = new Date(task.date);
-        let formattedDate = String(dateObj.getDate()).padStart(2, '0') + '.' + String(dateObj.getMonth() + 1).padStart(2, '0') + '.' + dateObj.getFullYear();
+        let formattedDate = '';
+        if (!isNaN(dateObj)) {
+            formattedDate = String(dateObj.getDate()).padStart(2, '0') + '.' + String(dateObj.getMonth() + 1).padStart(2, '0') + '.' + dateObj.getFullYear();
+        } else {
+            formattedDate = task.date || '';
+        }
+        
         const formattedH = h > 0 ? h.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : '0,0';
+        
         const row = document.createElement('tr');
         row.innerHTML = `
             <td data-label="Datum"><span contenteditable="true" class="editable-field" onkeydown="handleEnterKey(event)" onblur="updateOrderTaskField('${task.id}', 'date', this)">${formattedDate}</span></td>
@@ -511,6 +533,7 @@ async function loadOrderTasks() {
         `;
         tableBody.appendChild(row);
     });
+
     if (orderTasks.length > 0) {
         tableFoot.innerHTML = `
             <tr>
@@ -528,6 +551,10 @@ async function addEmptyOrderRow() {
         alert("Bitte zuerst oben eine Bestellnummer eingeben!"); 
         return; 
     }
+    
+    const btn = document.getElementById('addEmptyOrderRowBtn');
+    if (btn) btn.disabled = true;
+
     const today = new Date().toISOString().split('T')[0];
     const { error } = await db.from('order_tasks').insert([{ 
         ordernumber: orderNum,
@@ -535,11 +562,14 @@ async function addEmptyOrderRow() {
         description: '',
         hours: 0
     }]);
+    
     if (error) {
         alert("Fehler beim Speichern: " + error.message);
     } else {
-        loadOrderTasks();
+        await loadOrderTasks();
     }
+    
+    if (btn) btn.disabled = false;
 }
 
 window.deleteOrderTask = async function(id) {
@@ -552,7 +582,9 @@ window.updateOrderTaskField = async function(id, fieldName, element) {
     let newText = element.innerText.trim();
     let task = orderTasks.find(t => t.id.toString() === id.toString());
     if (!task) return;
+
     let valueToSave = newText;
+    
     if (fieldName === 'hours') {
         valueToSave = parseFloat(valueToSave.replace(',', '.'));
         if (isNaN(valueToSave)) valueToSave = 0;
@@ -564,10 +596,46 @@ window.updateOrderTaskField = async function(id, fieldName, element) {
             valueToSave = task.date;
         }
     }
+
+    let oldValue = task[fieldName];
+    if (fieldName === 'hours') {
+        if (parseFloat(oldValue || 0) === valueToSave) {
+            element.innerText = valueToSave > 0 ? valueToSave.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : '0,0';
+            return;
+        }
+    } else if (fieldName === 'date') {
+        if (oldValue === valueToSave) return;
+    } else {
+        if (oldValue === valueToSave) return;
+    }
+
     const updateData = {}; 
     updateData[fieldName] = valueToSave;
-    await db.from('order_tasks').update(updateData).eq('id', id);
-    loadOrderTasks();
+    const { error } = await db.from('order_tasks').update(updateData).eq('id', id);
+    
+    if (!error) {
+        task[fieldName] = valueToSave;
+
+        if (fieldName === 'hours') {
+            element.innerText = valueToSave > 0 ? valueToSave.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : '0,0';
+            let totalHours = 0;
+            orderTasks.forEach(t => {
+                totalHours += (parseFloat(t.hours) || 0);
+            });
+            const tableFoot = document.getElementById('orderTableFoot');
+            if (tableFoot) {
+                tableFoot.innerHTML = `
+                    <tr>
+                        <td colspan="4" style="text-align: right; font-weight: 800; border-top: 2px solid #1f2937; padding-top: 15px;">
+                            Gesamtstunden: <span style="margin-left: 15px;">${totalHours.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} Std.</span>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+    } else {
+        alert("Fehler beim Speichern!");
+    }
 };
 
 document.addEventListener("DOMContentLoaded", () => {
