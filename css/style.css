@@ -1040,6 +1040,9 @@ body > div > div.table-wrapper > table > tfoot > tr > td:nth-child(1) > span {
     h3 {
         font-size: 22px !important;
     }
+    h5 {
+        font-size: 18px!important;
+    }
     .company-logo {
         width: 120px !important;
     }
